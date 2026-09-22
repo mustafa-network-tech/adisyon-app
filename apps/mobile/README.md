@@ -14,7 +14,13 @@ altında.
 Faz 6: Mutfak ekranı (`lib/features/kitchen/`) — masa bazlı, canlı
 sipariş panosu; her kalem için NEW→PREPARING→READY→SERVED geçiş
 butonları, fiyat/toplam göstermiyor. Aynı akış web'de `/mutfak` altında
-da var. Kasa ekranı Faz 7'de eklenecek — bkz.
+da var.
+
+Faz 7: Kasa ekranı (`lib/features/cashier/`) — açık masalar ızgarası
+(tutar + hesap-istendi rozeti) → hesap detayı: kalem listesi (iptal
+seçeneğiyle), parçalı ödeme (Nakit/Kart/Diğer), ödeme iptali, tam
+ödenince "Hesabı Kapat", hiç ödeme yoksa "Siparişi İptal Et". Aynı akış
+web'de `/kasa` altında da var — bkz.
 [../../docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md).
 
 ## Çalıştırma

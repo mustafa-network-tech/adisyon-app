@@ -275,7 +275,15 @@ export interface Database {
           opened_by: string;
         };
         Update: Partial<Database["public"]["Tables"]["orders"]["Row"]>;
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "orders_table_id_fkey";
+            columns: ["table_id"];
+            isOneToOne: false;
+            referencedRelation: "restaurant_tables";
+            referencedColumns: ["id"];
+          }
+        ];
       };
       order_items: {
         Row: {
@@ -316,11 +324,14 @@ export interface Database {
           void_reason: string | null;
           created_at: string;
         };
+        // received_by is intentionally not required here: the
+        // check_payment_order_business trigger (20260922000020) always
+        // overwrites it from auth.uid() server-side, the same way
+        // business_id is derived rather than client-supplied.
         Insert: Partial<Database["public"]["Tables"]["payments"]["Row"]> & {
           order_id: string;
           method: PaymentMethod;
           amount: number;
-          received_by: string;
         };
         Update: Partial<Database["public"]["Tables"]["payments"]["Row"]>;
         Relationships: [];

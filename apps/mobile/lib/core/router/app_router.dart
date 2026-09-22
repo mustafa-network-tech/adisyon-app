@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/application/auth_providers.dart';
 import '../../features/auth/presentation/login_screen.dart';
+import '../../features/cashier/presentation/cashier_home_screen.dart';
+import '../../features/cashier/presentation/order_screen.dart';
 import '../../features/home/presentation/role_placeholder_screens.dart';
 import '../../features/kitchen/presentation/kitchen_screen.dart';
 import '../../features/splash/presentation/splash_screen.dart';
@@ -70,6 +72,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.cashierHome,
         builder: (context, state) => const CashierHomeScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.cashierOrderPattern,
+        builder: (context, state) =>
+            OrderScreen(orderId: state.pathParameters['orderId']!),
       ),
       GoRoute(
         path: AppRoutes.businessAdminHome,

@@ -4,21 +4,11 @@ import '../../../core/widgets/info_screen.dart';
 
 /// Faz 4 only wired up auth/session/role-routing -- each role's real
 /// screen is built in its own later phase. The waiter's real home lives
-/// in features/waiter (Faz 5), kitchen's in features/kitchen (Faz 6);
-/// cashier (Faz 7) is still a placeholder below.
-
-class CashierHomeScreen extends StatelessWidget {
-  const CashierHomeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const InfoScreen(
-      icon: Icons.point_of_sale_outlined,
-      title: 'Kasa',
-      message: 'Ödeme ve hesap kapatma ekranı Faz 7\'de burada olacak.',
-    );
-  }
-}
+/// in features/waiter (Faz 5), kitchen's in features/kitchen (Faz 6),
+/// cashier's in features/cashier (Faz 7). BUSINESS_ADMIN's mobile view
+/// stays a placeholder -- section 10 of the architecture doc scopes
+/// their mobile role to "basic tracking", and full management is
+/// already covered by the web panel.
 
 class BusinessAdminHomeScreen extends StatelessWidget {
   const BusinessAdminHomeScreen({super.key});

@@ -83,3 +83,8 @@ export type KitchenContext = MembershipContext;
 export function getKitchenContext() {
   return getMembershipContext("KITCHEN");
 }
+
+export type CashierContext = MembershipContext;
+export function getCashierContext() {
+  return getMembershipContext("CASHIER");
+}

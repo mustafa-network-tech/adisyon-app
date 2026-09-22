@@ -262,6 +262,21 @@ KITCHEN rolünün arayüzü onu hiç render etmiyor. KITCHEN, `order_items`
 (DB'de sıra zorlaması yok, arayüz doğrusal ilerlemeyi yönlendiriyor);
 VOID hâlâ Faz 5'teki trigger ile KITCHEN'a tamamen kapalı.
 
+**Faz 7 notları (`20260922000020_payment_and_order_close_guards.sql`):**
+Sipariş kapatma/iptal artık veritabanı seviyesinde korunuyor: bir siparişi
+yalnızca CASHIER/BUSINESS_ADMIN kapatabilir/iptal edebilir (WAITER
+`status` kolonunu değiştiremez, yalnızca `check_requested`'i
+değiştirebilir); **tam ödenmeden** bir sipariş kapatılamaz; **hiç
+ödemesi tamamlanmamış** bir sipariş dışında bir sipariş iptal edilemez.
+`payments.received_by` artık her zaman sunucuda `auth.uid()`'den
+alınıyor (Faz 1'de client'tan geliyordu — bir kasiyer başka bir
+personele ödeme "yazdırabilirdi", kapatıldı). `payments` VOID akışı
+`order_items` ile aynı desene kavuştu: `voided_by`/`voided_at` sunucuda,
+`void_reason` zorunlu, yalnızca sipariş hâlâ OPEN iken iptal edilebilir
+(kapanmış bir siparişin ödemesini düzeltmek gerçek bir "yeniden açma"
+akışı gerektirir — bilinçli olarak bu faza dahil edilmedi, manuel/admin
+müdahalesi olarak kalıyor).
+
 Bu ortamda Supabase CLI kurulu değil (`supabase` komutu bulunamadı).
 Migration'ları uygulamak için:
 
