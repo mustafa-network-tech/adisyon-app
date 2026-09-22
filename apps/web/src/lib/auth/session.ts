@@ -1,5 +1,6 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
+import type { MembershipRole } from "@/lib/supabase/database.types";
 
 export interface SessionContext {
   userId: string;
@@ -35,18 +36,18 @@ export async function getSessionContext(): Promise<SessionContext | null> {
   };
 }
 
-export interface BusinessAdminContext {
+export interface MembershipContext {
   userId: string;
   businessId: string;
   businessName: string;
 }
 
-// Resolves the business a BUSINESS_ADMIN manages. A user could in
-// principle hold BUSINESS_ADMIN in more than one business (multi-tenant
+// Resolves the business a user holds a given role in. A user could in
+// principle hold the same role in more than one business (multi-tenant
 // staff, section 5 of the architecture doc); for now we just take the
 // first active one -- a business switcher is future work once that's a
 // real scenario, not a guess worth building ahead of need.
-export async function getBusinessAdminContext(): Promise<BusinessAdminContext | null> {
+async function getMembershipContext(role: MembershipRole): Promise<MembershipContext | null> {
   const supabase = await createClient();
 
   const {
@@ -59,7 +60,7 @@ export async function getBusinessAdminContext(): Promise<BusinessAdminContext | 
     .from("business_memberships")
     .select("business_id, businesses(name)")
     .eq("user_id", user.id)
-    .eq("role", "BUSINESS_ADMIN")
+    .eq("role", role)
     .eq("active", true)
     .limit(1)
     .maybeSingle();
@@ -71,4 +72,14 @@ export async function getBusinessAdminContext(): Promise<BusinessAdminContext | 
     businessId: data.business_id,
     businessName: (data.businesses as { name: string } | null)?.name ?? "İşletme",
   };
+}
+
+export type BusinessAdminContext = MembershipContext;
+export function getBusinessAdminContext() {
+  return getMembershipContext("BUSINESS_ADMIN");
+}
+
+export type KitchenContext = MembershipContext;
+export function getKitchenContext() {
+  return getMembershipContext("KITCHEN");
 }

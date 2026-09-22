@@ -1,12 +1,13 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getSessionContext, getBusinessAdminContext } from "@/lib/auth/session";
+import { getSessionContext, getBusinessAdminContext, getKitchenContext } from "@/lib/auth/session";
 import { SignOutButton } from "@/components/sign-out-button";
 
-// Generic post-login landing page: routes a platform admin or business
-// admin straight to their panel; everyone else (CASHIER/WAITER/KITCHEN)
-// lands here with a clear status message, since those web dashboards are
-// built in later phases (their primary surface is the Flutter app).
+// Generic post-login landing page: routes a platform admin, business
+// admin, or kitchen staff straight to their panel; everyone else
+// (CASHIER/WAITER) lands here with a clear status message, since those
+// web dashboards are built in later phases (their primary surface is
+// the Flutter app).
 export default async function HesabimPage() {
   const ctx = await getSessionContext();
   if (!ctx) redirect("/giris");
@@ -14,6 +15,9 @@ export default async function HesabimPage() {
 
   const businessAdminCtx = await getBusinessAdminContext();
   if (businessAdminCtx) redirect("/isletme");
+
+  const kitchenCtx = await getKitchenContext();
+  if (kitchenCtx) redirect("/mutfak");
 
   const supabase = await createClient();
   const { data: memberships } = await supabase

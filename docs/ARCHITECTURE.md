@@ -249,6 +249,19 @@ sonra iptal CASHIER/BUSINESS_ADMIN yetkisi gerektiriyor); KITCHEN hiç
 VOID yapamıyor. `restaurant_tables` realtime publication'a eklendi
 (garson masa ızgarasının canlı güncellenmesi için).
 
+**Faz 6 notları:** Mutfak ekranı (Flutter + Web) hem `order_items` hem
+`orders` realtime akışlarını dinliyor ve masa adlarını (`restaurant_tables`)
+ayrı bir sorguyla alıp client tarafında birleştiriyor — `.stream()`/
+`postgres_changes` join desteklemediği için (Faz 1'de zaten bu üç tablo
+realtime publication'a eklenmişti). Mutfak ekranı bilinçli olarak fiyat/
+toplam göstermiyor (section 15: "Mutfak finansal bilgi görmemeli") —
+bu, RLS'te ayrı bir kısıtlama değil, ekran tasarımı kararı: `order_items`
+satırı zaten fiyat kolonu taşıyor (sipariş kalemi olarak gerekli), ama
+KITCHEN rolünün arayüzü onu hiç render etmiyor. KITCHEN, `order_items`
+üzerinde NEW→PREPARING→READY→SERVED geçişlerini serbestçe yapabiliyor
+(DB'de sıra zorlaması yok, arayüz doğrusal ilerlemeyi yönlendiriyor);
+VOID hâlâ Faz 5'teki trigger ile KITCHEN'a tamamen kapalı.
+
 Bu ortamda Supabase CLI kurulu değil (`supabase` komutu bulunamadı).
 Migration'ları uygulamak için:
 

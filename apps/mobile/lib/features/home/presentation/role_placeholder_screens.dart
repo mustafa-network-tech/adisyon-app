@@ -3,22 +3,9 @@ import 'package:flutter/material.dart';
 import '../../../core/widgets/info_screen.dart';
 
 /// Faz 4 only wired up auth/session/role-routing -- each role's real
-/// screen is built in its own later phase. The waiter's real home now
-/// lives in features/waiter/presentation/waiter_home_screen.dart (Faz 5);
-/// kitchen (Faz 6) and cashier (Faz 7) are still placeholders below.
-
-class KitchenHomeScreen extends StatelessWidget {
-  const KitchenHomeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const InfoScreen(
-      icon: Icons.soup_kitchen_outlined,
-      title: 'Mutfak',
-      message: 'Canlı sipariş ekranı Faz 6\'da burada olacak.',
-    );
-  }
-}
+/// screen is built in its own later phase. The waiter's real home lives
+/// in features/waiter (Faz 5), kitchen's in features/kitchen (Faz 6);
+/// cashier (Faz 7) is still a placeholder below.
 
 class CashierHomeScreen extends StatelessWidget {
   const CashierHomeScreen({super.key});

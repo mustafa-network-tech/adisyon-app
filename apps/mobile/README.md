@@ -9,7 +9,12 @@ Faz 5: Garson akışı tam çalışır durumda — alan seçimi → masa ızgara
 (canlı, Realtime) → masa açma → ürün/kategori seçimi → adet/not → sepeti
 mutfağa gönderme → sipariş durumu takibi → hesap isteme → (yalnızca
 henüz `NEW` durumundaki kalemler için) iptal. `lib/features/waiter/`
-altında. Mutfak/kasa ekranları Faz 6–7'de eklenecek — bkz.
+altında.
+
+Faz 6: Mutfak ekranı (`lib/features/kitchen/`) — masa bazlı, canlı
+sipariş panosu; her kalem için NEW→PREPARING→READY→SERVED geçiş
+butonları, fiyat/toplam göstermiyor. Aynı akış web'de `/mutfak` altında
+da var. Kasa ekranı Faz 7'de eklenecek — bkz.
 [../../docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md).
 
 ## Çalıştırma

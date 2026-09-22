@@ -1,7 +1,9 @@
-MK Adisyon web app (Platform Super Admin, business application/onboarding
-so far — see [../../docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md)).
-Copy `.env.local.example` to `.env.local` and fill in your Supabase
-project's URL/keys before running this.
+MK Adisyon web app: Platform Super Admin, business application/
+onboarding, Business Admin panel (`/isletme`), and a realtime Kitchen
+Display (`/mutfak`) so far — see
+[../../docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md). Copy
+`.env.local.example` to `.env.local` and fill in your Supabase project's
+URL/keys before running this.
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
