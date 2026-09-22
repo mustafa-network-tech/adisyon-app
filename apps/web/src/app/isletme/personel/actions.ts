@@ -64,13 +64,9 @@ export async function inviteStaff(
     };
   }
 
-  await supabase.rpc("log_audit_event", {
-    p_business_id: ctx.businessId,
-    p_action: "STAFF_INVITED",
-    p_entity: "business_memberships",
-    p_entity_id: newUserId,
-    p_metadata: { email, role },
-  });
+  // Audit entry (STAFF_INVITED) is written automatically by a DB trigger
+  // on this business_memberships insert -- see
+  // 20260922000027_audit_rpc_hardening.sql.
 
   revalidatePath("/isletme/personel");
   return { error: null };
@@ -100,13 +96,8 @@ export async function updateStaffRole(
 
   if (error) return { error: "Rol güncellenemedi. Lütfen tekrar deneyin." };
 
-  await supabase.rpc("log_audit_event", {
-    p_business_id: ctx.businessId,
-    p_action: "STAFF_ROLE_CHANGED",
-    p_entity: "business_memberships",
-    p_entity_id: membershipId,
-    p_metadata: { role },
-  });
+  // Audit entry (STAFF_ROLE_CHANGED) is written automatically by a DB
+  // trigger on this update -- see 20260922000027_audit_rpc_hardening.sql.
 
   revalidatePath("/isletme/personel");
   return { error: null };
@@ -132,13 +123,9 @@ export async function toggleStaffActive(
 
   if (error) return { error: "Güncellenemedi. Lütfen tekrar deneyin." };
 
-  await supabase.rpc("log_audit_event", {
-    p_business_id: ctx.businessId,
-    p_action: nextActive ? "STAFF_REACTIVATED" : "STAFF_DEACTIVATED",
-    p_entity: "business_memberships",
-    p_entity_id: membershipId,
-    p_metadata: {},
-  });
+  // Audit entry (STAFF_REACTIVATED/STAFF_DEACTIVATED) is written
+  // automatically by a DB trigger on this update -- see
+  // 20260922000027_audit_rpc_hardening.sql.
 
   revalidatePath("/isletme/personel");
   return { error: null };

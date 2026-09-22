@@ -1,40 +1,32 @@
 import { redirect } from "next/navigation";
-import { getSessionContext, getKitchenContext } from "@/lib/auth/session";
+import { getSessionContext } from "@/lib/auth/session";
 import { SignOutButton } from "@/components/sign-out-button";
 
-export default async function MutfakLayout({ children }: { children: React.ReactNode }) {
+// Faz 13 (production web routing): Kitchen Web is retired in favor of
+// the Android app -- section 1/11 of the production architecture make
+// KITCHEN an Android-only role. This route is intentionally never
+// rendered for anyone any more (not even KITCHEN itself); the board
+// component and its data logic are left untouched in kitchen-board.tsx
+// rather than deleted, in case Kitchen Web is ever revived.
+export default async function MutfakLayout(_props: { children: React.ReactNode }) {
   const ctx = await getSessionContext();
   if (!ctx) {
-    redirect("/giris?next=/mutfak");
-  }
-
-  const kitchenCtx = await getKitchenContext();
-
-  if (!kitchenCtx) {
-    return (
-      <div className="flex flex-1 items-center justify-center px-6 py-16">
-        <div className="w-full max-w-md rounded-xl border border-zinc-200 bg-white p-6 text-center shadow-sm">
-          <h1 className="text-xl font-semibold tracking-tight text-zinc-900">Erişim Yok</h1>
-          <p className="mt-2 text-sm leading-6 text-zinc-600">
-            Bu panele erişim yetkiniz bulunmuyor. Bu alan yalnızca mutfak personeli içindir.
-          </p>
-          <div className="mt-6">
-            <SignOutButton className="inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 bg-white px-5 text-sm font-medium text-zinc-900 hover:bg-zinc-50" />
-          </div>
-        </div>
-      </div>
-    );
+    redirect("/giris?next=/hesabim");
   }
 
   return (
-    <div className="flex min-h-screen flex-1 flex-col bg-zinc-100">
-      <header className="flex items-center justify-between border-b border-zinc-200 bg-white px-6 py-3">
-        <p className="text-base font-semibold text-zinc-900">
-          {kitchenCtx.businessName} · Mutfak
+    <div className="flex flex-1 items-center justify-center px-6 py-16">
+      <div className="w-full max-w-md rounded-xl border border-zinc-200 bg-white p-6 text-center shadow-sm">
+        <h1 className="text-xl font-semibold tracking-tight text-zinc-900">
+          Mutfak Ekranı Mobil Uygulamaya Taşındı
+        </h1>
+        <p className="mt-2 text-sm leading-6 text-zinc-600">
+          Bu web ekranı artık kullanılmıyor. Lütfen MK Adisyon mobil uygulamasını kullanın.
         </p>
-        <SignOutButton className="text-sm font-medium text-zinc-600 hover:text-zinc-900" />
-      </header>
-      <main className="flex-1">{children}</main>
+        <div className="mt-6">
+          <SignOutButton className="inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 bg-white px-5 text-sm font-medium text-zinc-900 hover:bg-zinc-50" />
+        </div>
+      </div>
     </div>
   );
 }

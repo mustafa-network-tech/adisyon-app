@@ -30,6 +30,11 @@ export async function createPlan(
   const name = String(formData.get("name") ?? "").trim();
   if (!name) return { error: "Plan adı boş olamaz." };
 
+  function parseNullableText(value: FormDataEntryValue | null): string | null {
+    const raw = String(value ?? "").trim();
+    return raw || null;
+  }
+
   const supabase = await createClient();
   const { error } = await supabase.from("plans").insert({
     name,
@@ -43,6 +48,9 @@ export async function createPlan(
     max_branches: parseNullableInt(formData.get("max_branches")),
     qr_menu_enabled: formData.get("qr_menu_enabled") === "on",
     reporting_level: String(formData.get("reporting_level") ?? "BASIC").trim() || "BASIC",
+    google_play_product_id: parseNullableText(formData.get("google_play_product_id")),
+    google_play_monthly_base_plan_id: parseNullableText(formData.get("google_play_monthly_base_plan_id")),
+    google_play_yearly_base_plan_id: parseNullableText(formData.get("google_play_yearly_base_plan_id")),
   });
 
   if (error) return { error: "Plan oluşturulamadı. Lütfen tekrar deneyin." };

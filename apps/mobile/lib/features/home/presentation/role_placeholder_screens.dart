@@ -37,17 +37,3 @@ class NoAccessScreen extends StatelessWidget {
     );
   }
 }
-
-class PlatformAdminInfoScreen extends StatelessWidget {
-  const PlatformAdminInfoScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const InfoScreen(
-      icon: Icons.admin_panel_settings_outlined,
-      title: 'Platform Yönetimi',
-      message:
-          'Bu hesap platform yönetimi içindir. Lütfen web panelini kullanın.',
-    );
-  }
-}

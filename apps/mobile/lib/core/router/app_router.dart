@@ -48,10 +48,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const NoAccessScreen(),
       ),
       GoRoute(
-        path: AppRoutes.platformAdminInfo,
-        builder: (context, state) => const PlatformAdminInfoScreen(),
-      ),
-      GoRoute(
         path: AppRoutes.waiterHome,
         builder: (context, state) => const WaiterHomeScreen(),
       ),

@@ -21,6 +21,11 @@ function parseDecimal(value: FormDataEntryValue | null): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+function parseNullableText(value: FormDataEntryValue | null): string | null {
+  const raw = String(value ?? "").trim();
+  return raw || null;
+}
+
 export async function updatePlan(
   planId: string,
   _prevState: PlanActionState,
@@ -47,6 +52,9 @@ export async function updatePlan(
       max_branches: parseNullableInt(formData.get("max_branches")),
       qr_menu_enabled: formData.get("qr_menu_enabled") === "on",
       reporting_level: String(formData.get("reporting_level") ?? "BASIC").trim() || "BASIC",
+      google_play_product_id: parseNullableText(formData.get("google_play_product_id")),
+      google_play_monthly_base_plan_id: parseNullableText(formData.get("google_play_monthly_base_plan_id")),
+      google_play_yearly_base_plan_id: parseNullableText(formData.get("google_play_yearly_base_plan_id")),
     })
     .eq("id", planId);
 

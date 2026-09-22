@@ -1,12 +1,17 @@
 import { createClient } from "@/lib/supabase/server";
 
 const actionLabels: Record<string, string> = {
-  BUSINESS_APPLICATION_APPROVED: "Başvuru Onaylandı",
+  BUSINESS_SELF_REGISTERED: "İşletme Kendi Kaydını Oluşturdu",
+  BUSINESS_APPLICATION_APPROVED: "Başvuru Onaylandı (eski akış)",
   BUSINESS_APPLICATION_REJECTED: "Başvuru Reddedildi",
   BUSINESS_SUSPENDED: "İşletme Askıya Alındı",
   BUSINESS_REACTIVATED: "İşletme Tekrar Aktif Edildi",
+  BUSINESS_ACTIVATED: "İşletme Aktif Edildi",
+  BUSINESS_DEACTIVATED: "İşletme Pasif Edildi",
+  BUSINESS_SUBSCRIPTION_STATUS_CHANGED: "Abonelik Durumu Değişti",
   BUSINESS_TRIAL_EXTENDED: "Deneme Süresi Uzatıldı",
   BUSINESS_PLAN_ASSIGNED: "Plan Atandı",
+  GOOGLE_PLAY_SUBSCRIPTION_VERIFIED: "Google Play Aboneliği Doğrulandı",
   STAFF_INVITED: "Personel Davet Edildi",
   STAFF_ROLE_CHANGED: "Personel Rolü Değiştirildi",
   STAFF_REACTIVATED: "Personel Tekrar Aktif Edildi",

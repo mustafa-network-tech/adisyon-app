@@ -4,7 +4,6 @@ class AppRoutes {
   static const splash = '/';
   static const login = '/giris';
   static const noAccess = '/erisim-yok';
-  static const platformAdminInfo = '/platform-yonetimi';
   static const waiterHome = '/garson';
   static const waiterTablePattern = '/garson/masa/:tableId';
   static const waiterMenuPattern = '/garson/masa/:tableId/menu';

@@ -78,9 +78,25 @@ export function PosBoard({ businessId }: { businessId: string }) {
       )
       .subscribe();
 
+    // Realtime postgres_changes doesn't replay events missed while the
+    // websocket was disconnected (PC sleep, wifi drop -- a real
+    // restaurant PC scenario), so the board can go stale until the next
+    // live event happens to arrive. Two cheap safety nets: refetch when
+    // the tab regains focus/visibility, and a slow poll as a backstop
+    // even if that never fires.
+    function handleVisibility() {
+      if (document.visibilityState === "visible") refresh();
+    }
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("focus", refresh);
+    const pollInterval = setInterval(refresh, 30000);
+
     return () => {
       clearTimeout(initialLoad);
       supabase.removeChannel(channel);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("focus", refresh);
+      clearInterval(pollInterval);
     };
   }, [refresh, supabase, businessId]);
 

@@ -49,6 +49,13 @@ export default async function BasvuruDetailPage({
         </span>
       </div>
 
+      {application.status === "PENDING" && (
+        <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          Bu başvuru akışı kaldırıldı. Bu kayıt onaylanamaz — işletmeler artık kendi
+          hesaplarını oluşturuyor. Yalnızca kaydı kapatmak için reddedebilirsiniz.
+        </div>
+      )}
+
       <dl className="mt-6 grid grid-cols-1 gap-5 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm sm:grid-cols-2">
         <Field label="İşletme Türü" value={application.business_type} />
         <Field label="Şehir" value={application.city} />

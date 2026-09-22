@@ -44,8 +44,12 @@ export default async function BasvurularPage({
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Başvurular</h1>
-      <p className="mt-1 text-sm text-zinc-600">İşletme başvurularını inceleyin ve onaylayın.</p>
+      <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Başvurular (Arşiv)</h1>
+      <p className="mt-1 text-sm text-zinc-600">
+        Bu akış kaldırıldı — işletmeler artık kendi hesaplarını oluşturarak (self-service)
+        otomatik 7 günlük deneme ile başlıyor. Aşağıdaki liste yalnızca eski başvuruların
+        geçmiş kaydıdır.
+      </p>
 
       <div className="mt-6 flex gap-1 border-b border-zinc-200">
         {statusTabs.map((tab) => (

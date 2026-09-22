@@ -27,6 +27,9 @@ export interface PlanDetail {
   max_branches: number | null;
   qr_menu_enabled: boolean;
   reporting_level: string;
+  google_play_product_id: string | null;
+  google_play_monthly_base_plan_id: string | null;
+  google_play_yearly_base_plan_id: string | null;
 }
 
 export function EditPlanForm({ plan }: { plan: PlanDetail }) {
@@ -188,6 +191,47 @@ export function EditPlanForm({ plan }: { plan: PlanDetail }) {
         />
         QR Menü özelliği açık
       </label>
+
+      <div className="sm:col-span-2">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+          Google Play Eşleştirme <span className="normal-case text-zinc-400">(opsiyonel)</span>
+        </p>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div>
+            <label className={labelClass} htmlFor="google_play_product_id">
+              Ürün Kimliği
+            </label>
+            <input
+              id="google_play_product_id"
+              name="google_play_product_id"
+              defaultValue={plan.google_play_product_id ?? ""}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className={labelClass} htmlFor="google_play_monthly_base_plan_id">
+              Aylık Base Plan
+            </label>
+            <input
+              id="google_play_monthly_base_plan_id"
+              name="google_play_monthly_base_plan_id"
+              defaultValue={plan.google_play_monthly_base_plan_id ?? ""}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className={labelClass} htmlFor="google_play_yearly_base_plan_id">
+              Yıllık Base Plan
+            </label>
+            <input
+              id="google_play_yearly_base_plan_id"
+              name="google_play_yearly_base_plan_id"
+              defaultValue={plan.google_play_yearly_base_plan_id ?? ""}
+              className={inputClass}
+            />
+          </div>
+        </div>
+      </div>
 
       <button
         type="submit"

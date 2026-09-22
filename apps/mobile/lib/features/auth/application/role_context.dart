@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'auth_providers.dart';
 
-enum AppRole { platformAdmin, businessAdmin, cashier, waiter, kitchen, none }
+enum AppRole { businessAdmin, cashier, waiter, kitchen, none }
 
 class RoleContext {
   const RoleContext({required this.role, this.businessId, this.businessName});
@@ -42,16 +42,6 @@ final roleContextProvider = FutureProvider<RoleContext>((ref) async {
   if (user == null) return const RoleContext(role: AppRole.none);
 
   final client = ref.watch(supabaseClientProvider);
-
-  final platformAdminRow = await client
-      .from('platform_admins')
-      .select('user_id')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
-  if (platformAdminRow != null) {
-    return const RoleContext(role: AppRole.platformAdmin);
-  }
 
   final memberships = await client
       .from('business_memberships')

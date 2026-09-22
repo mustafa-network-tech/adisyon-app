@@ -5,8 +5,9 @@ import { SignOutButton } from "@/components/sign-out-button";
 
 const navLinks = [
   { href: "/super-admin", label: "Genel Bakış" },
-  { href: "/super-admin/basvurular", label: "Başvurular" },
+  { href: "/super-admin/basvurular", label: "Başvurular (Arşiv)" },
   { href: "/super-admin/isletmeler", label: "İşletmeler" },
+  { href: "/super-admin/abonelikler", label: "Abonelikler" },
   { href: "/super-admin/planlar", label: "Planlar" },
   { href: "/super-admin/destek", label: "Destek" },
   { href: "/super-admin/audit", label: "Denetim Kaydı" },

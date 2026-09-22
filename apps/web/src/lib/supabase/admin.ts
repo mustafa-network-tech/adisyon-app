@@ -8,8 +8,11 @@ import type { Database } from "./database.types";
 //
 // Use this ONLY for operations that legitimately require elevated
 // privilege and cannot be expressed as "the signed-in user acting within
-// their own RLS-granted permissions", e.g. creating the auth user for a
-// newly approved business's admin during onboarding (src/app/(platform)/basvurular/[id]/actions.ts).
+// their own RLS-granted permissions", e.g. inviting a new staff member's
+// auth user (src/app/isletme/personel/actions.ts). Business creation
+// itself no longer needs this -- it's fully self-service via
+// public.create_own_business (src/app/kayit), called by the signed-in
+// owner's own session, no service role involved.
 // Every other read/write should go through server.ts or client.ts so RLS
 // stays the enforcement point.
 export function createAdminClient() {

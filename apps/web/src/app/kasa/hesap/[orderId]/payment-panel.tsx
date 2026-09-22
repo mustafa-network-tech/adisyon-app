@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { OrderStatus, PaymentMethod } from "@/lib/supabase/database.types";
@@ -32,12 +32,10 @@ const methodLabels: Record<PaymentMethod, string> = {
 
 export function PaymentPanel({
   orderId,
-  businessId,
   tableName,
   initialStatus,
 }: {
   orderId: string;
-  businessId: string;
   tableName: string;
   initialStatus: OrderStatus;
 }) {
@@ -53,6 +51,19 @@ export function PaymentPanel({
 
   const [method, setMethod] = useState<PaymentMethod>("CASH");
   const [amount, setAmount] = useState("");
+
+  // Idempotency (20260922000028_payment_idempotency.sql): a double-tap
+  // on "Ödeme Al", or a client retry after a dropped response, must
+  // never insert two payment rows for what the cashier intended as one
+  // payment. submittingRef blocks the synchronous double-click (state-
+  // based `disabled` only takes effect on the next render, which is too
+  // late for two clicks in the same tick); pendingRequestIdRef is a
+  // stable key reused across retries of the *same* attempt so a
+  // duplicate insert hits the DB's unique constraint instead of
+  // succeeding twice -- cleared on success, or whenever the cashier
+  // changes the amount/method (a genuinely new attempt gets a new key).
+  const submittingRef = useRef(false);
+  const pendingRequestIdRef = useRef<string | null>(null);
 
   const refresh = useCallback(async () => {
     const [orderRes, itemsRes, paymentsRes] = await Promise.all([
@@ -118,9 +129,21 @@ export function PaymentPanel({
       )
       .subscribe();
 
+    // Same reconnect/staleness safety net as pos-board.tsx -- realtime
+    // doesn't replay events missed while disconnected.
+    function handleVisibility() {
+      if (document.visibilityState === "visible") refresh();
+    }
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("focus", refresh);
+    const pollInterval = setInterval(refresh, 30000);
+
     return () => {
       clearTimeout(initialLoad);
       supabase.removeChannel(channel);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("focus", refresh);
+      clearInterval(pollInterval);
     };
   }, [refresh, supabase, orderId]);
 
@@ -135,22 +158,43 @@ export function PaymentPanel({
     event.preventDefault();
     setActionError(null);
 
+    if (submittingRef.current) return;
+
     const parsed = Number.parseFloat(amount.replace(",", "."));
     if (!Number.isFinite(parsed) || parsed <= 0) {
       setActionError("Geçerli bir tutar girin.");
       return;
     }
 
+    submittingRef.current = true;
     setBusy(true);
+
+    if (!pendingRequestIdRef.current) {
+      pendingRequestIdRef.current = crypto.randomUUID();
+    }
+
     const { error: insertError } = await supabase
       .from("payments")
-      .insert({ order_id: orderId, method, amount: parsed });
+      .insert({ order_id: orderId, method, amount: parsed, client_request_id: pendingRequestIdRef.current });
+
+    submittingRef.current = false;
     setBusy(false);
 
     if (insertError) {
+      if (insertError.code === "23505") {
+        // Unique violation on our own idempotency key: this exact
+        // payment attempt already succeeded (the first response was
+        // lost), not a failure -- treat it as success rather than
+        // risking a real duplicate on a second retry.
+        pendingRequestIdRef.current = null;
+        setAmount("");
+        refresh();
+        return;
+      }
       setActionError("Ödeme kaydedilemedi. Lütfen tekrar deneyin.");
       return;
     }
+    pendingRequestIdRef.current = null;
     setAmount("");
     refresh();
   }
@@ -170,13 +214,11 @@ export function PaymentPanel({
       setActionError("Ödeme iptal edilemedi.");
       return;
     }
-    await supabase.rpc("log_audit_event", {
-      p_business_id: businessId,
-      p_action: "PAYMENT_VOIDED",
-      p_entity: "payments",
-      p_entity_id: paymentId,
-      p_metadata: { reason: reason.trim() },
-    });
+    // Audit entry (PAYMENT_VOIDED) is written automatically by a DB
+    // trigger on this same UPDATE -- see
+    // 20260922000027_audit_rpc_hardening.sql. Client code can no longer
+    // log its own audit events (log_audit_event's grant to authenticated
+    // was revoked).
     refresh();
   }
 
@@ -195,13 +237,8 @@ export function PaymentPanel({
       setActionError("Ürün iptal edilemedi.");
       return;
     }
-    await supabase.rpc("log_audit_event", {
-      p_business_id: businessId,
-      p_action: "ORDER_ITEM_VOIDED",
-      p_entity: "order_items",
-      p_entity_id: itemId,
-      p_metadata: { reason: reason.trim() },
-    });
+    // Audit entry (ORDER_ITEM_VOIDED) is written automatically by a DB
+    // trigger -- see 20260922000027_audit_rpc_hardening.sql.
     refresh();
   }
 
@@ -234,13 +271,8 @@ export function PaymentPanel({
       setActionError("Sipariş iptal edilemedi.");
       return;
     }
-    await supabase.rpc("log_audit_event", {
-      p_business_id: businessId,
-      p_action: "ORDER_CANCELLED",
-      p_entity: "orders",
-      p_entity_id: orderId,
-      p_metadata: {},
-    });
+    // Audit entry (ORDER_CANCELLED) is written automatically by a DB
+    // trigger -- see 20260922000027_audit_rpc_hardening.sql.
     router.push("/kasa");
   }
 
@@ -350,7 +382,10 @@ export function PaymentPanel({
                 <button
                   key={m}
                   type="button"
-                  onClick={() => setMethod(m)}
+                  onClick={() => {
+                    pendingRequestIdRef.current = null;
+                    setMethod(m);
+                  }}
                   className={`flex-1 rounded-lg border px-3 py-2.5 text-sm font-semibold ${
                     method === m
                       ? "border-zinc-900 bg-zinc-900 text-white"
@@ -368,12 +403,18 @@ export function PaymentPanel({
                 min={0}
                 placeholder={remaining.toFixed(2)}
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) => {
+                  pendingRequestIdRef.current = null;
+                  setAmount(e.target.value);
+                }}
                 className="flex-1 rounded-lg border border-zinc-300 px-3.5 py-2.5 text-sm outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500"
               />
               <button
                 type="button"
-                onClick={() => setAmount(remaining.toFixed(2))}
+                onClick={() => {
+                  pendingRequestIdRef.current = null;
+                  setAmount(remaining.toFixed(2));
+                }}
                 className="rounded-lg border border-zinc-300 bg-white px-3 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
               >
                 Tam Tutar

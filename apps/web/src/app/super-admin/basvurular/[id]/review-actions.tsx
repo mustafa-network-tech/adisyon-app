@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { approveApplication, rejectApplication } from "./actions";
+import { rejectApplication } from "./actions";
 
 interface ReviewActionState {
   error: string | null;
@@ -9,55 +9,40 @@ interface ReviewActionState {
 
 const initialState: ReviewActionState = { error: null };
 
+// Faz 12: no more "Onayla" (approve) action -- approving would create a
+// business, which is no longer allowed outside the self-service flow.
+// This form only lets a platform admin close out a legacy PENDING
+// application by rejecting it.
 export function ReviewActions({ applicationId }: { applicationId: string }) {
   const [mode, setMode] = useState<"idle" | "reject">("idle");
 
-  const approveWithId = approveApplication.bind(null, applicationId);
   const rejectWithId = rejectApplication.bind(null, applicationId);
-
-  const [approveState, approveAction, approvePending] = useActionState<
-    ReviewActionState,
-    FormData
-  >(approveWithId, initialState);
   const [rejectState, rejectAction, rejectPending] = useActionState<
     ReviewActionState,
     FormData
   >(rejectWithId, initialState);
 
-  const error = approveState.error ?? rejectState.error;
-
   return (
     <div className="space-y-4">
-      {error && (
+      {rejectState.error && (
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
+          {rejectState.error}
         </div>
       )}
 
       {mode === "idle" ? (
-        <div className="flex gap-3">
-          <form action={approveAction}>
-            <button
-              type="submit"
-              disabled={approvePending}
-              className="inline-flex h-10 items-center justify-center rounded-lg bg-emerald-600 px-5 text-sm font-medium text-white transition-colors hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {approvePending ? "Onaylanıyor..." : "Başvuruyu Onayla"}
-            </button>
-          </form>
-          <button
-            type="button"
-            onClick={() => setMode("reject")}
-            className="inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 bg-white px-5 text-sm font-medium text-zinc-900 hover:bg-zinc-50"
-          >
-            Reddet
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => setMode("reject")}
+          className="inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 bg-white px-5 text-sm font-medium text-zinc-900 hover:bg-zinc-50"
+        >
+          Başvuruyu Reddet / Kapat
+        </button>
       ) : (
         <form action={rejectAction} className="space-y-3">
           <div>
             <label className="mb-1.5 block text-sm font-medium text-zinc-800" htmlFor="rejection_reason">
-              Red Nedeni (opsiyonel)
+              Not (opsiyonel)
             </label>
             <textarea
               id="rejection_reason"
@@ -72,7 +57,7 @@ export function ReviewActions({ applicationId }: { applicationId: string }) {
               disabled={rejectPending}
               className="inline-flex h-10 items-center justify-center rounded-lg bg-red-600 px-5 text-sm font-medium text-white transition-colors hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {rejectPending ? "Reddediliyor..." : "Reddi Onayla"}
+              {rejectPending ? "Kapatılıyor..." : "Reddi Onayla"}
             </button>
             <button
               type="button"

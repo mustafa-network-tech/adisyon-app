@@ -24,13 +24,8 @@ export async function suspendBusiness(
 
   if (error) return { error: "İşletme askıya alınamadı." };
 
-  await supabase.rpc("log_audit_event", {
-    p_business_id: businessId,
-    p_action: "BUSINESS_SUSPENDED",
-    p_entity: "businesses",
-    p_entity_id: businessId,
-    p_metadata: {},
-  });
+  // Audit entry (BUSINESS_SUSPENDED) is written automatically by a DB
+  // trigger on this update -- see 20260922000027_audit_rpc_hardening.sql.
 
   revalidatePath(`/super-admin/isletmeler/${businessId}`);
   revalidatePath("/super-admin/isletmeler");
@@ -53,13 +48,8 @@ export async function reactivateBusiness(
 
   if (error) return { error: "İşletme tekrar aktif edilemedi." };
 
-  await supabase.rpc("log_audit_event", {
-    p_business_id: businessId,
-    p_action: "BUSINESS_REACTIVATED",
-    p_entity: "businesses",
-    p_entity_id: businessId,
-    p_metadata: {},
-  });
+  // Audit entry (BUSINESS_REACTIVATED) is written automatically by a DB
+  // trigger on this update -- see 20260922000027_audit_rpc_hardening.sql.
 
   revalidatePath(`/super-admin/isletmeler/${businessId}`);
   revalidatePath("/super-admin/isletmeler");
@@ -98,13 +88,8 @@ export async function extendTrial(
 
   if (error) return { error: "Deneme süresi uzatılamadı." };
 
-  await supabase.rpc("log_audit_event", {
-    p_business_id: businessId,
-    p_action: "BUSINESS_TRIAL_EXTENDED",
-    p_entity: "businesses",
-    p_entity_id: businessId,
-    p_metadata: { days, new_trial_ends_at: base.toISOString() },
-  });
+  // Audit entry (BUSINESS_TRIAL_EXTENDED) is written automatically by a
+  // DB trigger on this update -- see 20260922000027_audit_rpc_hardening.sql.
 
   revalidatePath(`/super-admin/isletmeler/${businessId}`);
   revalidatePath("/super-admin/isletmeler");
@@ -129,13 +114,8 @@ export async function assignPlan(
 
   if (error) return { error: "Plan atanamadı. Lütfen tekrar deneyin." };
 
-  await supabase.rpc("log_audit_event", {
-    p_business_id: businessId,
-    p_action: "BUSINESS_PLAN_ASSIGNED",
-    p_entity: "businesses",
-    p_entity_id: businessId,
-    p_metadata: { plan_id: planId || null },
-  });
+  // Audit entry (BUSINESS_PLAN_ASSIGNED) is written automatically by a
+  // DB trigger on this update -- see 20260922000027_audit_rpc_hardening.sql.
 
   revalidatePath(`/super-admin/isletmeler/${businessId}`);
   return { error: null };

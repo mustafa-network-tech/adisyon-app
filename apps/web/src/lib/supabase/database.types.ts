@@ -3,7 +3,21 @@
 // regenerate with the Supabase CLI once a real project exists:
 //   supabase gen types typescript --project-id <ref> > src/lib/supabase/database.types.ts
 
-export type SubscriptionStatus = "TRIAL" | "ACTIVE" | "EXPIRED" | "SUSPENDED" | "CANCELLED";
+export type SubscriptionStatus =
+  | "TRIAL"
+  | "ACTIVE"
+  | "GRACE_PERIOD"
+  | "EXPIRED"
+  | "SUSPENDED"
+  | "CANCELLED";
+export type GooglePlayPurchaseState =
+  | "PENDING"
+  | "ACTIVE"
+  | "GRACE_PERIOD"
+  | "ON_HOLD"
+  | "CANCELLED"
+  | "EXPIRED"
+  | "REVOKED";
 export type ApplicationStatus = "PENDING" | "APPROVED" | "REJECTED";
 export type MembershipRole = "BUSINESS_ADMIN" | "CASHIER" | "WAITER" | "KITCHEN";
 export type TableStatus = "AVAILABLE" | "OCCUPIED" | "CHECK_REQUESTED";
@@ -52,6 +66,9 @@ export interface Database {
           qr_menu_enabled: boolean;
           reporting_level: string;
           feature_flags: Record<string, unknown>;
+          google_play_product_id: string | null;
+          google_play_monthly_base_plan_id: string | null;
+          google_play_yearly_base_plan_id: string | null;
           active: boolean;
           created_at: string;
           updated_at: string;
@@ -330,6 +347,9 @@ export interface Database {
           voided_by: string | null;
           voided_at: string | null;
           void_reason: string | null;
+          // Idempotency key (20260922000028) -- optional, unique per
+          // order when present. See payment-panel.tsx.
+          client_request_id: string | null;
           created_at: string;
         };
         // received_by is intentionally not required here: the
@@ -436,12 +456,62 @@ export interface Database {
           }
         ];
       };
+      google_play_purchases: {
+        Row: {
+          id: string;
+          business_id: string;
+          plan_id: string | null;
+          product_id: string;
+          base_plan_id: string | null;
+          // purchase_token exists on the row but is only ever readable by
+          // a platform admin (google_play_purchases_select_platform_admin)
+          // -- business-facing code must use get_own_business_subscription
+          // instead, which never returns it.
+          purchase_token: string;
+          order_id: string | null;
+          purchase_state: GooglePlayPurchaseState;
+          auto_renewing: boolean;
+          start_time: string | null;
+          expiry_time: string | null;
+          last_verified_at: string | null;
+          raw_verification_response: Record<string, unknown>;
+          created_at: string;
+          updated_at: string;
+        };
+        // No client Insert/Update -- see
+        // 20260922000026_google_play_subscriptions.sql: writes only
+        // happen via apply_google_play_verification_result, which isn't
+        // granted to `authenticated` at all yet.
+        Insert: never;
+        Update: never;
+        Relationships: [
+          {
+            foreignKeyName: "google_play_purchases_business_id_fkey";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "google_play_purchases_plan_id_fkey";
+            columns: ["plan_id"];
+            isOneToOne: false;
+            referencedRelation: "plans";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
       is_platform_admin: { Args: Record<string, never>; Returns: boolean };
       has_business_role: { Args: { p_business_id: string; p_roles: string[] }; Returns: boolean };
       is_business_member: { Args: { p_business_id: string }; Returns: boolean };
+      // log_audit_event still exists in the database but its EXECUTE
+      // grant to `authenticated` was revoked (20260922000027) -- it's
+      // now only called internally by SECURITY DEFINER triggers. Kept
+      // here only as documentation of the underlying signature, not
+      // because client code may call it.
       log_audit_event: {
         Args: {
           p_business_id: string | null;
@@ -451,6 +521,29 @@ export interface Database {
           p_metadata?: Record<string, unknown>;
         };
         Returns: string;
+      };
+      create_own_business: {
+        Args: {
+          p_name: string;
+          p_business_type?: string | null;
+          p_city?: string | null;
+          p_address?: string | null;
+          p_phone?: string | null;
+          p_email?: string | null;
+        };
+        Returns: string;
+      };
+      get_own_business_subscription: {
+        Args: { p_business_id: string };
+        Returns: {
+          product_id: string;
+          base_plan_id: string | null;
+          purchase_state: GooglePlayPurchaseState;
+          auto_renewing: boolean;
+          start_time: string | null;
+          expiry_time: string | null;
+          last_verified_at: string | null;
+        }[];
       };
       get_revenue_summary: {
         Args: { p_business_id: string; p_start: string; p_end: string };

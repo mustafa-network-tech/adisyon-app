@@ -344,6 +344,48 @@ projesinde çalıştırılabilir bir doğrulama script'i de eklendi:
 görüntülenebiliyor (Faz 1'den beri veritabanında vardı ama arayüzü
 yoktu).
 
+**Faz 12 notları (self-service + Google Play altyapısı +
+audit RPC sertleştirme):** Master prompt'un mimari revizyonu üç ana
+değişiklik getirdi:
+
+1. **İşletmeler artık Super Admin onayıyla açılmıyor.** `/basvuru`
+   (public başvuru formu) ve `business_applications` üzerinden manuel
+   onay akışı kaldırıldı (`business_applications_insert_public` policy'si
+   drop edildi -- tablo ve geçmiş kayıtlar silinmedi, `/super-admin/basvurular`
+   salt-okunur bir arşive dönüştü). Yerine `/kayit`: kullanıcı kendi
+   hesabını ve işletmesini tek adımda oluşturuyor, `public.create_own_business`
+   (SECURITY DEFINER) trial alanlarını (subscription_status='TRIAL',
+   trial_ends_at=+7 gün, plan_id=null=sınırsız) tamamen sunucuda hesaplıyor,
+   client'tan hiçbir trial/durum alanı kabul etmiyor
+   (`20260922000025_self_service_business_signup.sql`).
+2. **Google Play abonelik alt yapısı** (`20260922000026_google_play_subscriptions.sql`):
+   `plans`'a Play product/base-plan eşleştirme kolonları, `google_play_purchases`
+   tablosu (purchase_token yalnızca platform admin'e SELECT edilebilir,
+   client insert/update policy'si yok), business-scoped güvenli projeksiyon
+   (`get_own_business_subscription`, token'ı hiç döndürmez), ve doğrulama
+   giriş noktası `apply_google_play_verification_result` (henüz hiçbir role
+   grant edilmedi -- gerçek Google Play Developer API entegrasyonu bu
+   ortamda credential olmadığı için yapılmadı, bkz. bölüm 16 sonu).
+   `subscription_status`/`subscriptions.status` check constraint'lerine
+   `GRACE_PERIOD` eklendi.
+3. **Audit RPC sertleştirme** (`20260922000027_audit_rpc_hardening.sql`):
+   `log_audit_event`'in `authenticated`'e execute grant'i kaldırıldı --
+   önceden herhangi bir WAITER/CASHIER kendi business'ı için tamamen
+   uydurma `action`/`entity`/`metadata` içerikli sahte denetim kaydı
+   yazabiliyordu (yalnızca `is_business_member` kontrolü vardı, loglanan
+   olayın gerçekten olup olmadığını doğrulayan hiçbir mekanizma yoktu).
+   Artık hassas olaylar (ödeme/kalem/sipariş iptali, personel
+   davet/rol/aktiflik değişikliği, işletme askıya alma/aktive etme/plan
+   atama/trial uzatma, başvuru onay/red) doğrudan ilgili tablonun
+   trigger'ından, gerçek OLD/NEW satır farkından otomatik loglanıyor --
+   client artık hiçbir audit kaydı yazamıyor.
+
+Flutter tarafında PLATFORM_SUPER_ADMIN'e ait hiçbir rol/route/ekran yok
+(kaldırıldı: `AppRole.platformAdmin`, `/platform-yonetimi`,
+`PlatformAdminInfoScreen`) -- bu rol yalnızca web Super Admin panelinde
+var. Backend `platform_admins` tablosu ve `is_platform_admin()` RLS
+yardımcı fonksiyonu dokunulmadı (hâlâ gerekli).
+
 Bu ortamda Supabase CLI kurulu değil (`supabase` komutu bulunamadı).
 Migration'ları uygulamak için:
 

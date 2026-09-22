@@ -103,6 +103,37 @@ kayıtlı:
   etkilemiyor; salt-okunur bir menüyü göstermek operasyonel bir risk
   taşımıyor (Faz 10 notu).
 
+## Faz 12: genel amaçlı audit RPC açığı (bağımsız/Codex denetim bulgusu)
+
+Bağımsız bir güvenlik denetiminde, `log_audit_event`'in `authenticated`
+rolüne `grant execute` edilmiş olması ve tek kontrolünün
+`is_business_member(p_business_id)` olması işaretlendi: `action`,
+`entity`, `entity_id`, `metadata` alanları tamamen client tarafından
+belirleniyordu, hiçbir gerçek DB olayına bağlı değildi. Somut senaryo:
+herhangi bir WAITER veya CASHIER (ikisi de `is_business_member`'ı geçer)
+devtools'tan doğrudan
+`supabase.rpc('log_audit_event', { p_business_id: <kendi işletmesi>,
+p_action: 'HERHANGİ_BİR_ŞEY', p_entity: 'herhangi', p_entity_id: <hiç
+kontrol edilmeyen, başka işletmeye bile ait olabilecek bir uuid>,
+p_metadata: {...} })` çağırıp, arayüzde gerçek bir kayıttan ayırt
+edilemeyen, hiç yaşanmamış bir olay için sahte denetim kaydı
+yazabiliyordu. Bu, section 30'un "kim, ne zaman, ne yaptı" garantisini
+doğrudan geçersiz kılıyordu.
+
+**Düzeltme** (`20260922000027_audit_rpc_hardening.sql`):
+`log_audit_event`'in `authenticated`'e execute grant'i tamamen
+kaldırıldı -- client artık bu fonksiyonu hiç çağıramıyor. Önceden bu
+RPC'yi ikinci, ayrı bir "güvenilir" çağrı olarak kullanan her hassas
+olay (ödeme/sipariş kalemi/sipariş iptali, personel davet/rol/aktiflik
+değişikliği, işletme askıya alma/aktive etme/plan atama/trial uzatma,
+başvuru onay/red) artık ilgili tablonun trigger'ından otomatik
+loglanıyor -- action/entity/metadata gerçek `OLD`/`NEW` satır farkından
+türetiliyor, client'ın iddiasından değil. Trigger fonksiyonları
+`SECURITY DEFINER` olduğu için `log_audit_event`'i owner yetkisiyle
+çağırabiliyor (revoke yalnızca `authenticated`'i etkiliyor, fonksiyon
+sahibini değil) -- bu yüzden sahte bir kayıt yazmak artık ilgili gerçek
+state değişikliğini (ve ona ait yetkiyi) gerçekten yapmayı gerektiriyor.
+
 ## Performans
 
 Faz 8'in rapor sorguları (`get_revenue_summary`, `get_top_products`,

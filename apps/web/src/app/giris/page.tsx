@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { LoginForm } from "./login-form";
 
 export default async function GirisPage({
@@ -18,6 +19,13 @@ export default async function GirisPage({
         <div className="mt-8 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
           <LoginForm next={next && next.startsWith("/") ? next : "/hesabim"} />
         </div>
+
+        <p className="mt-4 text-center text-sm text-zinc-500">
+          Hesabınız yok mu?{" "}
+          <Link href="/kayit" className="font-medium text-zinc-900 hover:underline">
+            Ücretsiz kayıt olun
+          </Link>
+        </p>
       </div>
     </div>
   );

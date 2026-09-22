@@ -1,19 +1,11 @@
-import { ApplicationForm } from "./application-form";
+import { redirect } from "next/navigation";
 
+// Faz 12: this public application form is retired -- businesses no
+// longer open via Super Admin approval, they self-register at /kayit
+// (see public.create_own_business). business_applications_insert_public
+// was dropped in 20260922000025_self_service_business_signup.sql, so
+// this route could no longer accept a submission even if rendered;
+// redirect straight to the flow that replaced it.
 export default function BasvuruPage() {
-  return (
-    <div className="flex flex-1 justify-center px-6 py-16">
-      <div className="w-full max-w-xl">
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">İşletme Başvurusu</h1>
-        <p className="mt-2 text-sm leading-6 text-zinc-600">
-          Formu doldurun, ekibimiz başvurunuzu inceleyip en kısa sürede size dönüş yapsın.
-          Onaylanan işletmeler 7 gün ücretsiz deneme ile başlar.
-        </p>
-
-        <div className="mt-8 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-          <ApplicationForm />
-        </div>
-      </div>
-    </div>
-  );
+  redirect("/kayit");
 }

@@ -6,6 +6,7 @@ import { SignOutButton } from "@/components/sign-out-button";
 
 const navLinks = [
   { href: "/isletme", label: "Genel Bakış" },
+  { href: "/kasa", label: "Kasa" },
   { href: "/isletme/alanlar", label: "Alanlar" },
   { href: "/isletme/masalar", label: "Masalar" },
   { href: "/isletme/kategoriler", label: "Kategoriler" },

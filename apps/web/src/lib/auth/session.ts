@@ -98,3 +98,15 @@ export type ReportsContext = MembershipContext;
 export function getReportsContext() {
   return getMembershipContext(["BUSINESS_ADMIN", "CASHIER"]);
 }
+
+// PC Kasa/POS (production web routing, Faz 13): CASHIER is the primary
+// role, but BUSINESS_ADMIN is also allowed to operate the till -- every
+// orders/order_items/payments RLS write policy already includes
+// BUSINESS_ADMIN alongside CASHIER (see 20260922000014_orders_items_payments.sql),
+// so this only widens who can reach the UI, not what the database lets
+// them do once there. WAITER and KITCHEN are deliberately excluded --
+// their production surface is the Android app, not this screen.
+export type KasaContext = MembershipContext;
+export function getKasaContext() {
+  return getMembershipContext(["CASHIER", "BUSINESS_ADMIN"]);
+}

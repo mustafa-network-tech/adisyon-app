@@ -1,10 +1,6 @@
-import { redirect } from "next/navigation";
-import { getKitchenContext } from "@/lib/auth/session";
-import { KitchenBoard } from "./kitchen-board";
-
-export default async function MutfakPage() {
-  const ctx = await getKitchenContext();
-  if (!ctx) redirect("/hesabim");
-
-  return <KitchenBoard businessId={ctx.businessId} />;
+// Faz 13: Kitchen Web is retired -- see mutfak/layout.tsx, which never
+// renders this page's output any more. KitchenBoard is left unused
+// rather than deleted (kitchen-board.tsx), in case this screen returns.
+export default function MutfakPage() {
+  return null;
 }

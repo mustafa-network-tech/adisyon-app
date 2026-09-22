@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getCashierContext } from "@/lib/auth/session";
+import { getKasaContext } from "@/lib/auth/session";
 import { PaymentPanel } from "./payment-panel";
 
 export default async function HesapPage({
@@ -9,7 +9,7 @@ export default async function HesapPage({
   params: Promise<{ orderId: string }>;
 }) {
   const { orderId } = await params;
-  const ctx = await getCashierContext();
+  const ctx = await getKasaContext();
   if (!ctx) redirect("/hesabim");
 
   const supabase = await createClient();
@@ -28,7 +28,6 @@ export default async function HesapPage({
   return (
     <PaymentPanel
       orderId={order.id}
-      businessId={ctx.businessId}
       tableName={tableName}
       initialStatus={order.status}
     />

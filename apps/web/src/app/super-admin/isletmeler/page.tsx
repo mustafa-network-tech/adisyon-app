@@ -6,6 +6,7 @@ const statusTabs: { value: SubscriptionStatus | "ALL"; label: string }[] = [
   { value: "ALL", label: "Tümü" },
   { value: "TRIAL", label: "Deneme" },
   { value: "ACTIVE", label: "Aktif" },
+  { value: "GRACE_PERIOD", label: "Ödeme Bekliyor" },
   { value: "SUSPENDED", label: "Askıda" },
   { value: "EXPIRED", label: "Süresi Doldu" },
   { value: "CANCELLED", label: "İptal" },
@@ -14,6 +15,7 @@ const statusTabs: { value: SubscriptionStatus | "ALL"; label: string }[] = [
 const statusLabels: Record<SubscriptionStatus, string> = {
   TRIAL: "Deneme",
   ACTIVE: "Aktif",
+  GRACE_PERIOD: "Ödeme Bekliyor",
   EXPIRED: "Süresi Doldu",
   SUSPENDED: "Askıda",
   CANCELLED: "İptal",
@@ -22,6 +24,7 @@ const statusLabels: Record<SubscriptionStatus, string> = {
 const statusBadgeClass: Record<SubscriptionStatus, string> = {
   TRIAL: "bg-blue-50 text-blue-700 border-blue-200",
   ACTIVE: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  GRACE_PERIOD: "bg-amber-50 text-amber-700 border-amber-200",
   EXPIRED: "bg-zinc-100 text-zinc-600 border-zinc-200",
   SUSPENDED: "bg-red-50 text-red-700 border-red-200",
   CANCELLED: "bg-zinc-100 text-zinc-600 border-zinc-200",
@@ -36,6 +39,7 @@ export default async function IsletmelerPage({
   const activeStatus: SubscriptionStatus | "ALL" =
     status === "TRIAL" ||
     status === "ACTIVE" ||
+    status === "GRACE_PERIOD" ||
     status === "SUSPENDED" ||
     status === "EXPIRED" ||
     status === "CANCELLED"
@@ -53,6 +57,16 @@ export default async function IsletmelerPage({
   }
 
   const { data: businesses } = await query;
+
+  const businessIds = (businesses ?? []).map((b) => b.id);
+  const { data: membershipCounts } = businessIds.length
+    ? await supabase.from("business_memberships").select("business_id").in("business_id", businessIds).eq("active", true)
+    : { data: [] as { business_id: string }[] };
+
+  const userCountByBusiness = new Map<string, number>();
+  for (const row of membershipCounts ?? []) {
+    userCountByBusiness.set(row.business_id, (userCountByBusiness.get(row.business_id) ?? 0) + 1);
+  }
 
   return (
     <div>
@@ -85,6 +99,7 @@ export default async function IsletmelerPage({
                 <th className="px-5 py-3 font-medium">İşletme</th>
                 <th className="px-5 py-3 font-medium">Şehir</th>
                 <th className="px-5 py-3 font-medium">Durum</th>
+                <th className="px-5 py-3 font-medium">Kullanıcı</th>
                 <th className="px-5 py-3 font-medium">Deneme Bitiş</th>
               </tr>
             </thead>
@@ -109,6 +124,9 @@ export default async function IsletmelerPage({
                     >
                       {statusLabels[biz.subscription_status]}
                     </span>
+                  </td>
+                  <td className="px-5 py-3 text-zinc-600">
+                    {userCountByBusiness.get(biz.id) ?? 0}
                   </td>
                   <td className="px-5 py-3 text-zinc-500">
                     {biz.subscription_status === "TRIAL"

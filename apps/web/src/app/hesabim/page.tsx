@@ -3,15 +3,16 @@ import { createClient } from "@/lib/supabase/server";
 import {
   getSessionContext,
   getBusinessAdminContext,
-  getKitchenContext,
   getCashierContext,
 } from "@/lib/auth/session";
 import { SignOutButton } from "@/components/sign-out-button";
 
 // Generic post-login landing page: routes a platform admin, business
-// admin, kitchen, or cashier straight to their panel; everyone else
-// (WAITER) lands here with a clear status message, since that web
-// dashboard isn't built (WAITER's primary surface is the Flutter app).
+// admin, or cashier straight to their panel; everyone else (WAITER,
+// KITCHEN) lands here with a clear status message. Faz 13: KITCHEN no
+// longer redirects to /mutfak -- kitchen operations moved to the
+// Android app only in production, so KITCHEN now falls into the same
+// "use the mobile app" message WAITER already got.
 export default async function HesabimPage() {
   const ctx = await getSessionContext();
   if (!ctx) redirect("/giris");
@@ -19,9 +20,6 @@ export default async function HesabimPage() {
 
   const businessAdminCtx = await getBusinessAdminContext();
   if (businessAdminCtx) redirect("/isletme");
-
-  const kitchenCtx = await getKitchenContext();
-  if (kitchenCtx) redirect("/mutfak");
 
   const cashierCtx = await getCashierContext();
   if (cashierCtx) redirect("/kasa");

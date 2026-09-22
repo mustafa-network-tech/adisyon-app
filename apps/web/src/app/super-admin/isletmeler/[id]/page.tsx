@@ -6,6 +6,7 @@ import { BusinessActions } from "./business-actions";
 const statusLabels = {
   TRIAL: "Deneme",
   ACTIVE: "Aktif",
+  GRACE_PERIOD: "Ödeme Bekliyor",
   EXPIRED: "Süresi Doldu",
   SUSPENDED: "Askıda",
   CANCELLED: "İptal",
@@ -44,13 +45,30 @@ export default async function IsletmeDetailPage({
 
   const planName = (business.plans as { name: string } | null)?.name ?? null;
 
-  const [{ data: memberships }, { data: plans }] = await Promise.all([
-    supabase
-      .from("business_memberships")
-      .select("id, role, active, profiles(full_name, phone)")
-      .eq("business_id", id),
-    supabase.from("plans").select("id, name").eq("active", true).order("created_at"),
-  ]);
+  const [{ data: memberships }, { data: plans }, { count: tableCount }, { data: lastActivity }] =
+    await Promise.all([
+      supabase
+        .from("business_memberships")
+        .select("id, role, active, user_id, profiles(full_name, phone)")
+        .eq("business_id", id),
+      supabase.from("plans").select("id, name").eq("active", true).order("created_at"),
+      supabase
+        .from("restaurant_tables")
+        .select("id", { count: "exact", head: true })
+        .eq("business_id", id)
+        .eq("active", true),
+      supabase
+        .from("audit_logs")
+        .select("created_at")
+        .eq("business_id", id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+
+  const owner = memberships?.find((m) => m.role === "BUSINESS_ADMIN" && m.active);
+  const ownerName = (owner?.profiles as { full_name: string | null } | null)?.full_name ?? null;
+  const activeUserCount = memberships?.filter((m) => m.active).length ?? 0;
 
   return (
     <div className="max-w-2xl">
@@ -66,12 +84,15 @@ export default async function IsletmeDetailPage({
       </div>
 
       <dl className="mt-6 grid grid-cols-1 gap-5 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm sm:grid-cols-2">
+        <Field label="Sahibi" value={ownerName} />
         <Field label="İşletme Türü" value={business.business_type} />
         <Field label="Şehir" value={business.city} />
         <Field label="Telefon" value={business.phone} />
         <Field label="E-posta" value={business.email} />
         <Field label="Adres" value={business.address} />
         <Field label="Plan" value={planName ?? "Atanmamış"} />
+        <Field label="Kullanıcı Sayısı" value={String(activeUserCount)} />
+        <Field label="Masa Sayısı" value={String(tableCount ?? 0)} />
         <Field
           label="Deneme Bitiş Tarihi"
           value={new Date(business.trial_ends_at).toLocaleString("tr-TR")}
@@ -79,6 +100,10 @@ export default async function IsletmeDetailPage({
         <Field
           label="Oluşturulma Tarihi"
           value={new Date(business.created_at).toLocaleString("tr-TR")}
+        />
+        <Field
+          label="Son Aktivite"
+          value={lastActivity ? new Date(lastActivity.created_at).toLocaleString("tr-TR") : "—"}
         />
       </dl>
 

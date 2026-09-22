@@ -34,7 +34,6 @@ class SplashScreen extends ConsumerWidget {
 
   String _locationFor(AppRole role) {
     return switch (role) {
-      AppRole.platformAdmin => AppRoutes.platformAdminInfo,
       AppRole.businessAdmin => AppRoutes.businessAdminHome,
       AppRole.cashier => AppRoutes.cashierHome,
       AppRole.waiter => AppRoutes.waiterHome,

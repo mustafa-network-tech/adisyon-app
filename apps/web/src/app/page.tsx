@@ -11,10 +11,10 @@ export default function Home() {
 
         <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Link
-            href="/basvuru"
+            href="/kayit"
             className="inline-flex h-11 items-center justify-center rounded-lg bg-zinc-900 px-6 text-sm font-medium text-white transition-colors hover:bg-zinc-800"
           >
-            İşletme Başvurusu Yap
+            Ücretsiz Başlayın
           </Link>
           <Link
             href="/giris"
