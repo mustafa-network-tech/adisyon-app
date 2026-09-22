@@ -364,7 +364,15 @@ export interface Database {
           description: string;
         };
         Update: Partial<Database["public"]["Tables"]["support_requests"]["Row"]>;
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "support_requests_business_id_fkey";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          }
+        ];
       };
       custom_software_requests: {
         Row: {
@@ -387,7 +395,15 @@ export interface Database {
           need: string;
         };
         Update: Partial<Database["public"]["Tables"]["custom_software_requests"]["Row"]>;
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "custom_software_requests_business_id_fkey";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          }
+        ];
       };
       audit_logs: {
         Row: {
@@ -434,6 +450,23 @@ export interface Database {
       get_top_products: {
         Args: { p_business_id: string; p_start: string; p_end: string; p_limit?: number };
         Returns: { product_name: string; total_quantity: number; total_revenue: number }[];
+      };
+      get_qr_menu_business: {
+        Args: { p_business_id: string };
+        Returns: { name: string; logo_url: string | null; business_type: string | null; city: string | null }[];
+      };
+      get_qr_menu_items: {
+        Args: { p_business_id: string };
+        Returns: {
+          category_id: string;
+          category_name: string;
+          category_sort_order: number;
+          product_id: string | null;
+          product_name: string | null;
+          product_description: string | null;
+          product_price: number | null;
+          product_image_url: string | null;
+        }[];
       };
     };
   };

@@ -315,6 +315,23 @@ durumu banner'ı eklendi (deneme gün sayacı, askıya alma/süre dolma
 uyarısı) — section 8'in "kullanıcıya anlaşılır abonelik ekranı göster"
 maddesi.
 
+**Faz 10 notları (`20260922000023_qr_menu.sql`):** QR Menü public
+sayfası (`/menu/[businessId]`) `categories`/`products`/`businesses`
+tablolarına doğrudan anon erişim **açmıyor** — RLS satır seviyesinde
+olduğu için bu, `businesses`'in e-posta/telefon/deneme tarihi gibi
+hassas kolonlarını da sızdırırdı. Bunun yerine iki SECURITY DEFINER
+fonksiyon (`get_qr_menu_business`, `get_qr_menu_items`) yalnızca güvenli
+bir projeksiyon döndürüyor, ve yalnızca işletmenin planında
+`qr_menu_enabled = true` ise satır dönüyor — sıfır satır, "bulunamadı"
+ile "QR menü kapalı" arasında ayrım yapılmasını engelliyor (bir
+saldırganın hangi işletmelerin var olduğunu bu yoldan keşfetmesini
+zorlaştırıyor). QR kod görseli `/isletme/qr-menu`'de sunucu tarafında
+`qrcode` npm paketiyle SVG olarak üretiliyor — üçüncü taraf bir QR
+servisine istek atılmıyor. Destek (`support_requests`) ve özel yazılım
+(`custom_software_requests`) talepleri için ayrı bir migration
+gerekmedi — RLS politikaları zaten Faz 1'de doğru kurulmuştu, yalnızca
+arayüz eksikti (`/isletme/destek`, `/super-admin/destek`).
+
 Bu ortamda Supabase CLI kurulu değil (`supabase` komutu bulunamadı).
 Migration'ları uygulamak için:
 

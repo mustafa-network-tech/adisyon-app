@@ -1,10 +1,12 @@
-MK Adisyon web app: Platform Super Admin (including plan management at
-`/super-admin/planlar`), business application/onboarding, Business
-Admin panel (`/isletme` — now with a subscription-status banner), a
-realtime Kitchen Display (`/mutfak`), a POS/Kasa (`/kasa` — open
-tables, split payments, close/cancel a bill), and revenue reports
-(`/raporlar` — today/7d/30d revenue by payment method, top products,
-transaction history) so far — see
+MK Adisyon web app: Platform Super Admin (plan management at
+`/super-admin/planlar`, support/custom-software inbox at
+`/super-admin/destek`), business application/onboarding, Business Admin
+panel (`/isletme` — subscription-status banner, QR menu at
+`/isletme/qr-menu`, support/custom-software forms at `/isletme/destek`),
+a realtime Kitchen Display (`/mutfak`), a POS/Kasa (`/kasa` — open
+tables, split payments, close/cancel a bill), revenue reports
+(`/raporlar`), and a public QR menu page (`/menu/[businessId]`, no auth
+— gated per-business by the `qr_menu_enabled` plan flag) so far — see
 [../../docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md). Copy
 `.env.local.example` to `.env.local` and fill in your Supabase project's
 URL/keys before running this.
