@@ -356,9 +356,10 @@ export interface Database {
           created_at: string;
           updated_at: string;
         };
+        // requester_id is intentionally not required here: a trigger
+        // (20260922000024) always overwrites it from auth.uid().
         Insert: Partial<Database["public"]["Tables"]["support_requests"]["Row"]> & {
           business_id: string;
-          requester_id: string;
           type: SupportRequestType;
           subject: string;
           description: string;
@@ -418,7 +419,22 @@ export interface Database {
         };
         Insert: never;
         Update: never;
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_actor_id_fkey";
+            columns: ["actor_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "audit_logs_business_id_fkey";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          }
+        ];
       };
     };
     Views: Record<string, never>;

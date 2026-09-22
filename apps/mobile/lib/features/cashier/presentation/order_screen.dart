@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/utils/audit.dart';
 import '../../../core/utils/currency.dart';
+import '../../auth/application/auth_providers.dart';
+import '../../auth/application/role_context.dart';
 import '../application/cashier_providers.dart';
 import '../domain/models.dart';
 import 'widgets/payment_form.dart';
@@ -47,6 +50,8 @@ class _OrderScreenState extends ConsumerState<OrderScreen> {
     );
   }
 
+  String? get _businessId => ref.read(roleContextProvider).value?.businessId;
+
   Future<void> _voidItem(String itemId) async {
     final reason = await _askReason();
     if (reason == null || reason.trim().isEmpty) return;
@@ -54,6 +59,17 @@ class _OrderScreenState extends ConsumerState<OrderScreen> {
       await ref
           .read(cashierRepositoryProvider)
           .voidItem(itemId: itemId, reason: reason.trim());
+      final businessId = _businessId;
+      if (businessId != null) {
+        await logAuditEvent(
+          ref.read(supabaseClientProvider),
+          businessId: businessId,
+          action: 'ORDER_ITEM_VOIDED',
+          entity: 'order_items',
+          entityId: itemId,
+          metadata: {'reason': reason.trim()},
+        );
+      }
     } catch (_) {
       _showError('Ürün iptal edilemedi.');
     }
@@ -66,6 +82,17 @@ class _OrderScreenState extends ConsumerState<OrderScreen> {
       await ref
           .read(cashierRepositoryProvider)
           .voidPayment(paymentId: paymentId, reason: reason.trim());
+      final businessId = _businessId;
+      if (businessId != null) {
+        await logAuditEvent(
+          ref.read(supabaseClientProvider),
+          businessId: businessId,
+          action: 'PAYMENT_VOIDED',
+          entity: 'payments',
+          entityId: paymentId,
+          metadata: {'reason': reason.trim()},
+        );
+      }
     } catch (_) {
       _showError('Ödeme iptal edilemedi.');
     }
@@ -121,6 +148,16 @@ class _OrderScreenState extends ConsumerState<OrderScreen> {
     setState(() => _busy = true);
     try {
       await ref.read(cashierRepositoryProvider).cancelOrder(widget.orderId);
+      final businessId = _businessId;
+      if (businessId != null) {
+        await logAuditEvent(
+          ref.read(supabaseClientProvider),
+          businessId: businessId,
+          action: 'ORDER_CANCELLED',
+          entity: 'orders',
+          entityId: widget.orderId,
+        );
+      }
       if (mounted) context.pop();
     } catch (_) {
       _showError('Sipariş iptal edilemedi.');

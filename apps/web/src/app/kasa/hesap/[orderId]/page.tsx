@@ -26,6 +26,11 @@ export default async function HesapPage({
     (order.restaurant_tables as { name: string } | null)?.name ?? "Masa";
 
   return (
-    <PaymentPanel orderId={order.id} tableName={tableName} initialStatus={order.status} />
+    <PaymentPanel
+      orderId={order.id}
+      businessId={ctx.businessId}
+      tableName={tableName}
+      initialStatus={order.status}
+    />
   );
 }

@@ -32,10 +32,12 @@ const methodLabels: Record<PaymentMethod, string> = {
 
 export function PaymentPanel({
   orderId,
+  businessId,
   tableName,
   initialStatus,
 }: {
   orderId: string;
+  businessId: string;
   tableName: string;
   initialStatus: OrderStatus;
 }) {
@@ -164,8 +166,18 @@ export function PaymentPanel({
       .eq("id", paymentId);
     setBusy(false);
 
-    if (voidError) setActionError("Ödeme iptal edilemedi.");
-    else refresh();
+    if (voidError) {
+      setActionError("Ödeme iptal edilemedi.");
+      return;
+    }
+    await supabase.rpc("log_audit_event", {
+      p_business_id: businessId,
+      p_action: "PAYMENT_VOIDED",
+      p_entity: "payments",
+      p_entity_id: paymentId,
+      p_metadata: { reason: reason.trim() },
+    });
+    refresh();
   }
 
   async function voidItem(itemId: string) {
@@ -179,8 +191,18 @@ export function PaymentPanel({
       .eq("id", itemId);
     setBusy(false);
 
-    if (voidError) setActionError("Ürün iptal edilemedi.");
-    else refresh();
+    if (voidError) {
+      setActionError("Ürün iptal edilemedi.");
+      return;
+    }
+    await supabase.rpc("log_audit_event", {
+      p_business_id: businessId,
+      p_action: "ORDER_ITEM_VOIDED",
+      p_entity: "order_items",
+      p_entity_id: itemId,
+      p_metadata: { reason: reason.trim() },
+    });
+    refresh();
   }
 
   async function closeOrder() {
@@ -212,6 +234,13 @@ export function PaymentPanel({
       setActionError("Sipariş iptal edilemedi.");
       return;
     }
+    await supabase.rpc("log_audit_event", {
+      p_business_id: businessId,
+      p_action: "ORDER_CANCELLED",
+      p_entity: "orders",
+      p_entity_id: orderId,
+      p_metadata: {},
+    });
     router.push("/kasa");
   }
 

@@ -14,6 +14,7 @@ const navLinks = [
   { href: "/isletme/qr-menu", label: "QR Menü" },
   { href: "/raporlar", label: "Raporlar" },
   { href: "/isletme/destek", label: "Destek" },
+  { href: "/isletme/audit", label: "Denetim Kaydı" },
   { href: "/isletme/ayarlar", label: "Ayarlar" },
 ];
 

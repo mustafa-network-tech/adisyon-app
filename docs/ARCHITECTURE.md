@@ -332,6 +332,18 @@ servisine istek atılmıyor. Destek (`support_requests`) ve özel yazılım
 gerekmedi — RLS politikaları zaten Faz 1'de doğru kurulmuştu, yalnızca
 arayüz eksikti (`/isletme/destek`, `/super-admin/destek`).
 
+**Faz 11 notları:** Section 29'un RLS penetrasyon senaryolarının
+sistematik incelemesi, bulunan 3 gerçek boşluk
+(`20260922000024_security_review_hardening.sql`), audit log kapsam
+tablosu ve bilinçli olarak ertelenen riskler için ayrı bir doküman var:
+[`docs/SECURITY_REVIEW.md`](SECURITY_REVIEW.md). Gerçek bir Supabase
+projesinde çalıştırılabilir bir doğrulama script'i de eklendi:
+[`supabase/tests/rls_penetration_tests.sql`](../supabase/tests/rls_penetration_tests.sql)
+(tamamen bir transaction içinde çalışır, `ROLLBACK` ile biter).
+`/super-admin/audit` ve `/isletme/audit` ile audit_logs artık
+görüntülenebiliyor (Faz 1'den beri veritabanında vardı ama arayüzü
+yoktu).
+
 Bu ortamda Supabase CLI kurulu değil (`supabase` komutu bulunamadı).
 Migration'ları uygulamak için:
 

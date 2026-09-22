@@ -27,9 +27,10 @@ export async function createSupportRequest(
   if (!description) return { error: "Açıklama boş olamaz." };
 
   const supabase = await createClient();
+  // requester_id is not sent -- a trigger always derives it from
+  // auth.uid() server-side (20260922000024), so it can't be forged.
   const { error } = await supabase.from("support_requests").insert({
     business_id: ctx.businessId,
-    requester_id: ctx.userId,
     type,
     subject,
     description,

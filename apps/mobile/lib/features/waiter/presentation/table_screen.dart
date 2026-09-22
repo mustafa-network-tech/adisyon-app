@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/router/app_routes.dart';
+import '../../../core/utils/audit.dart';
 import '../../../core/utils/currency.dart';
 import '../../../core/utils/errors.dart';
 import '../../auth/application/auth_providers.dart';
@@ -32,11 +33,7 @@ class _TableScreenState extends ConsumerState<TableScreen> {
     try {
       await ref
           .read(waiterRepositoryProvider)
-          .openTable(
-            businessId: role!.businessId!,
-            tableId: widget.tableId,
-            waiterId: _currentUserId(),
-          );
+          .openTable(businessId: role!.businessId!, tableId: widget.tableId);
       ref.invalidate(openOrderProvider(widget.tableId));
     } on PostgrestException catch (e) {
       _showError(
@@ -54,8 +51,6 @@ class _TableScreenState extends ConsumerState<TableScreen> {
       if (mounted) setState(() => _busy = false);
     }
   }
-
-  String _currentUserId() => ref.read(currentUserProvider)!.id;
 
   Future<void> _requestCheck(String orderId) async {
     setState(() => _busy = true);
@@ -76,6 +71,17 @@ class _TableScreenState extends ConsumerState<TableScreen> {
       await ref
           .read(waiterRepositoryProvider)
           .voidOrderItem(itemId: item.id, reason: reason.trim());
+      final businessId = ref.read(roleContextProvider).value?.businessId;
+      if (businessId != null) {
+        await logAuditEvent(
+          ref.read(supabaseClientProvider),
+          businessId: businessId,
+          action: 'ORDER_ITEM_VOIDED',
+          entity: 'order_items',
+          entityId: item.id,
+          metadata: {'reason': reason.trim()},
+        );
+      }
     } catch (_) {
       _showError('Ürün iptal edilemedi. Lütfen tekrar deneyin.');
     }

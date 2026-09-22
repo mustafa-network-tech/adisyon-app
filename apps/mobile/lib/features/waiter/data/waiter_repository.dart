@@ -51,19 +51,17 @@ class WaiterRepository {
   /// Opens a table by creating its order. A unique index guarantees at
   /// most one OPEN order per table at the database level -- if this
   /// throws a unique-violation, another waiter opened it first, and the
-  /// caller should refresh instead of retrying blindly.
+  /// caller should refresh instead of retrying blindly. opened_by is
+  /// deliberately not sent -- a trigger always derives it from
+  /// auth.uid() server-side (20260922000024), the same way
+  /// received_by/voided_by already work, so it can't be forged.
   Future<String> openTable({
     required String businessId,
     required String tableId,
-    required String waiterId,
   }) async {
     final row = await _client
         .from('orders')
-        .insert({
-          'business_id': businessId,
-          'table_id': tableId,
-          'opened_by': waiterId,
-        })
+        .insert({'business_id': businessId, 'table_id': tableId})
         .select('id')
         .single();
     return row['id'] as String;
