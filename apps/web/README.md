@@ -1,9 +1,11 @@
-MK Adisyon web app: Platform Super Admin, business application/
-onboarding, Business Admin panel (`/isletme`), a realtime Kitchen
-Display (`/mutfak`), a POS/Kasa (`/kasa` — open tables, split payments,
-close/cancel a bill), and revenue reports (`/raporlar` — today/7d/30d
-revenue by payment method, top products, transaction history) so far —
-see [../../docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md). Copy
+MK Adisyon web app: Platform Super Admin (including plan management at
+`/super-admin/planlar`), business application/onboarding, Business
+Admin panel (`/isletme` — now with a subscription-status banner), a
+realtime Kitchen Display (`/mutfak`), a POS/Kasa (`/kasa` — open
+tables, split payments, close/cancel a bill), and revenue reports
+(`/raporlar` — today/7d/30d revenue by payment method, top products,
+transaction history) so far — see
+[../../docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md). Copy
 `.env.local.example` to `.env.local` and fill in your Supabase project's
 URL/keys before running this.
 

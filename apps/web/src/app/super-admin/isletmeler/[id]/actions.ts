@@ -110,3 +110,33 @@ export async function extendTrial(
   revalidatePath("/super-admin/isletmeler");
   return { error: null };
 }
+
+export async function assignPlan(
+  businessId: string,
+  _prevState: BusinessActionState,
+  formData: FormData
+): Promise<BusinessActionState> {
+  const ctx = await getSessionContext();
+  if (!ctx?.isPlatformAdmin) return { error: "Bu işlem için yetkiniz yok." };
+
+  const planId = String(formData.get("plan_id") ?? "").trim();
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("businesses")
+    .update({ plan_id: planId || null })
+    .eq("id", businessId);
+
+  if (error) return { error: "Plan atanamadı. Lütfen tekrar deneyin." };
+
+  await supabase.rpc("log_audit_event", {
+    p_business_id: businessId,
+    p_action: "BUSINESS_PLAN_ASSIGNED",
+    p_entity: "businesses",
+    p_entity_id: businessId,
+    p_metadata: { plan_id: planId || null },
+  });
+
+  revalidatePath(`/super-admin/isletmeler/${businessId}`);
+  return { error: null };
+}

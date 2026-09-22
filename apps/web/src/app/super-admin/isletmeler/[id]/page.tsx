@@ -35,13 +35,22 @@ export default async function IsletmeDetailPage({
   const { id } = await params;
   const supabase = await createClient();
 
-  const { data: business } = await supabase.from("businesses").select("*").eq("id", id).single();
+  const { data: business } = await supabase
+    .from("businesses")
+    .select("*, plans(name)")
+    .eq("id", id)
+    .single();
   if (!business) notFound();
 
-  const { data: memberships } = await supabase
-    .from("business_memberships")
-    .select("id, role, active, profiles(full_name, phone)")
-    .eq("business_id", id);
+  const planName = (business.plans as { name: string } | null)?.name ?? null;
+
+  const [{ data: memberships }, { data: plans }] = await Promise.all([
+    supabase
+      .from("business_memberships")
+      .select("id, role, active, profiles(full_name, phone)")
+      .eq("business_id", id),
+    supabase.from("plans").select("id, name").eq("active", true).order("created_at"),
+  ]);
 
   return (
     <div className="max-w-2xl">
@@ -62,6 +71,7 @@ export default async function IsletmeDetailPage({
         <Field label="Telefon" value={business.phone} />
         <Field label="E-posta" value={business.email} />
         <Field label="Adres" value={business.address} />
+        <Field label="Plan" value={planName ?? "Atanmamış"} />
         <Field
           label="Deneme Bitiş Tarihi"
           value={new Date(business.trial_ends_at).toLocaleString("tr-TR")}
@@ -73,7 +83,12 @@ export default async function IsletmeDetailPage({
       </dl>
 
       <div className="mt-6">
-        <BusinessActions businessId={business.id} subscriptionStatus={business.subscription_status} />
+        <BusinessActions
+          businessId={business.id}
+          subscriptionStatus={business.subscription_status}
+          plans={plans ?? []}
+          currentPlanId={business.plan_id}
+        />
       </div>
 
       <div className="mt-6 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getSessionContext, getBusinessAdminContext } from "@/lib/auth/session";
+import { createClient } from "@/lib/supabase/server";
 import { SignOutButton } from "@/components/sign-out-button";
 
 const navLinks = [
@@ -39,6 +40,13 @@ export default async function IsletmeLayout({ children }: { children: React.Reac
     );
   }
 
+  const supabase = await createClient();
+  const { data: business } = await supabase
+    .from("businesses")
+    .select("subscription_status, trial_ends_at")
+    .eq("id", businessCtx.businessId)
+    .single();
+
   return (
     <div className="flex min-h-screen flex-1">
       <aside className="hidden w-60 shrink-0 border-r border-zinc-200 bg-white sm:flex sm:flex-col">
@@ -69,8 +77,61 @@ export default async function IsletmeLayout({ children }: { children: React.Reac
           <p className="text-sm font-semibold text-zinc-900">{businessCtx.businessName}</p>
           <SignOutButton className="text-sm font-medium text-zinc-700" />
         </header>
-        <main className="flex-1 px-6 py-8 sm:px-10">{children}</main>
+        <main className="flex-1 px-6 py-8 sm:px-10">
+          {business && <SubscriptionBanner business={business} />}
+          {children}
+        </main>
       </div>
     </div>
   );
+}
+
+// Pulled out of the component body (rather than calling Date.now()
+// inline in the render) so it reads as an ordinary pure-in/pure-out
+// helper, not a component computing an impure value during render.
+function daysUntil(dateIso: string): number {
+  return Math.ceil((new Date(dateIso).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+}
+
+// "Kullanıcıya anlaşılır abonelik ekranı göster" (section 8). A trial
+// countdown once it's getting close, and a clear explanation whenever
+// the business can't open new orders -- never a raw status enum.
+function SubscriptionBanner({
+  business,
+}: {
+  business: { subscription_status: string; trial_ends_at: string };
+}) {
+  if (business.subscription_status === "SUSPENDED") {
+    return (
+      <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        Hesabınız askıya alındı. Yeni sipariş oluşturma gibi işlemler kısıtlanmıştır. Lütfen
+        destek ile iletişime geçin.
+      </div>
+    );
+  }
+  if (business.subscription_status === "EXPIRED" || business.subscription_status === "CANCELLED") {
+    return (
+      <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        Aboneliğinizin süresi doldu. Yeni sipariş oluşturma gibi işlemler kısıtlanmıştır. Devam
+        etmek için lütfen bir plan seçin veya destek ile iletişime geçin.
+      </div>
+    );
+  }
+  if (business.subscription_status === "TRIAL") {
+    const daysLeft = daysUntil(business.trial_ends_at);
+    if (daysLeft <= 0) {
+      return (
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          Ücretsiz deneme süreniz doldu. Yeni sipariş oluşturma gibi işlemler kısıtlanmıştır.
+          Devam etmek için lütfen destek ile iletişime geçin.
+        </div>
+      );
+    }
+    return (
+      <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        Ücretsiz deneme sürenizin bitmesine {daysLeft} gün kaldı.
+      </div>
+    );
+  }
+  return null;
 }

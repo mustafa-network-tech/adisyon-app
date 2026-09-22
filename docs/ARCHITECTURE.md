@@ -292,6 +292,29 @@ bu fazda yok — master prompt'un faz listesinde yalnızca bu fazda
 "Flutter" ön eki geçmiyor (Faz 5/6/7'nin aksine), rapor ekranları
 doğası gereği masaüstü/web odaklı.
 
+**Faz 9 notları (`20260922000022_trial_and_plan_limits.sql`):**
+`business_is_operational(business_id)` fonksiyonu bir işletmenin yeni
+sipariş açıp açamayacağını belirliyor (ACTIVE, veya TRIAL +
+`trial_ends_at` henüz geçmemiş). Bu kontrol yalnızca `orders` INSERT'inde
+uygulanıyor — **halihazırda açık bir hesabı kapatmak/ödemek asla
+engellenmiyor**; deneme süresi servis ortasında dolsa bile müşteri
+mağdur olmuyor. `max_areas`/`max_tables`/`max_waiters`/`max_users` plan
+limitleri sırasıyla `areas`/`restaurant_tables`/`business_memberships`
+INSERT'lerinde kontrol ediliyor; işletmeye plan atanmamışsa veya bir
+limit `null` ise sınırsız kabul ediliyor. Her iki kontrol de Postgres
+`RAISE EXCEPTION` mesajına `PLAN_LIMIT_EXCEEDED`/
+`TRIAL_OR_SUBSCRIPTION_INACTIVE` öneki koyuyor; web (`lib/supabase/errors.ts`)
+ve Flutter (`core/utils/errors.dart`) tarafında bu önek yakalanıp
+anlaşılır Türkçe mesaja çevriliyor.
+
+Süper Admin artık `/super-admin/planlar`'dan plan oluşturabiliyor/
+düzenleyebiliyor ve işletme detay sayfasından (`/super-admin/isletmeler/[id]`)
+bir işletmeye plan atayabiliyor — Faz 1'den beri var olan `plans`
+tablosunun ilk gerçek yönetim arayüzü. `/isletme` paneline bir abonelik
+durumu banner'ı eklendi (deneme gün sayacı, askıya alma/süre dolma
+uyarısı) — section 8'in "kullanıcıya anlaşılır abonelik ekranı göster"
+maddesi.
+
 Bu ortamda Supabase CLI kurulu değil (`supabase` komutu bulunamadı).
 Migration'ları uygulamak için:
 

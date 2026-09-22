@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getBusinessAdminContext } from "@/lib/auth/session";
+import { friendlyWriteErrorMessage } from "@/lib/supabase/errors";
 import type { MembershipRole } from "@/lib/supabase/database.types";
 
 interface StaffActionState {
@@ -58,7 +59,9 @@ export async function inviteStaff(
     if (membershipError.code === "23505") {
       return { error: "Bu kullanıcı zaten işletmenizin personeli." };
     }
-    return { error: "Personel eklenemedi. Lütfen tekrar deneyin." };
+    return {
+      error: friendlyWriteErrorMessage(membershipError, "Personel eklenemedi. Lütfen tekrar deneyin."),
+    };
   }
 
   await supabase.rpc("log_audit_event", {

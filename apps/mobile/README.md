@@ -20,7 +20,13 @@ Faz 7: Kasa ekranı (`lib/features/cashier/`) — açık masalar ızgarası
 (tutar + hesap-istendi rozeti) → hesap detayı: kalem listesi (iptal
 seçeneğiyle), parçalı ödeme (Nakit/Kart/Diğer), ödeme iptali, tam
 ödenince "Hesabı Kapat", hiç ödeme yoksa "Siparişi İptal Et". Aynı akış
-web'de `/kasa` altında da var — bkz.
+web'de `/kasa` altında da var.
+
+Faz 9: deneme süresi dolmuş/askıya alınmış bir işletme artık yeni masa
+açamıyor (mevcut açık hesabı ödeyip kapatmak hep serbest) — garson
+ekranı bunu `core/utils/errors.dart` üzerinden anlaşılır bir mesajla
+gösteriyor. Plan limitleri (masa/garson/kullanıcı) web'deki işletme
+yönetim panelinde aynı şekilde uygulanıyor — bkz.
 [../../docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md).
 
 ## Çalıştırma

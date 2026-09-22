@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getBusinessAdminContext } from "@/lib/auth/session";
+import { friendlyWriteErrorMessage } from "@/lib/supabase/errors";
 
 interface TableActionState {
   error: string | null;
@@ -31,7 +32,9 @@ export async function createTable(
     name,
   });
 
-  if (error) return { error: "Masa eklenemedi. Lütfen tekrar deneyin." };
+  if (error) {
+    return { error: friendlyWriteErrorMessage(error, "Masa eklenemedi. Lütfen tekrar deneyin.") };
+  }
 
   revalidatePath("/isletme/masalar");
   return { error: null };

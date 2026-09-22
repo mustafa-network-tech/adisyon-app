@@ -80,7 +80,15 @@ export interface Database {
         };
         Insert: Partial<Database["public"]["Tables"]["businesses"]["Row"]> & { name: string };
         Update: Partial<Database["public"]["Tables"]["businesses"]["Row"]>;
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "businesses_plan_id_fkey";
+            columns: ["plan_id"];
+            isOneToOne: false;
+            referencedRelation: "plans";
+            referencedColumns: ["id"];
+          }
+        ];
       };
       business_memberships: {
         Row: {

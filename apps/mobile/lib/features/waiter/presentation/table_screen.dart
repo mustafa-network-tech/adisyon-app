@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/router/app_routes.dart';
 import '../../../core/utils/currency.dart';
+import '../../../core/utils/errors.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../auth/application/role_context.dart';
 import '../application/waiter_providers.dart';
@@ -41,7 +42,10 @@ class _TableScreenState extends ConsumerState<TableScreen> {
       _showError(
         e.code == '23505'
             ? 'Bu masa az önce başka biri tarafından açıldı. Sayfa yenileniyor.'
-            : 'Masa açılamadı. Lütfen tekrar deneyin.',
+            : friendlyWriteErrorMessage(
+                e,
+                'Masa açılamadı. Lütfen tekrar deneyin.',
+              ),
       );
       ref.invalidate(openOrderProvider(widget.tableId));
     } catch (_) {

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getBusinessAdminContext } from "@/lib/auth/session";
+import { friendlyWriteErrorMessage } from "@/lib/supabase/errors";
 
 // Shared CRUD for the two entities that are structurally identical:
 // areas and categories (business_id, name, sort_order, active). Tables
@@ -40,7 +41,9 @@ export async function createSimpleEntity(
     name,
   });
 
-  if (error) return { error: "Eklenemedi. Lütfen tekrar deneyin." };
+  if (error) {
+    return { error: friendlyWriteErrorMessage(error, "Eklenemedi. Lütfen tekrar deneyin.") };
+  }
 
   revalidatePath(paths[table]);
   return { error: null };

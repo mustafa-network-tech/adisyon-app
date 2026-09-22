@@ -7,6 +7,7 @@ const navLinks = [
   { href: "/super-admin", label: "Genel Bakış" },
   { href: "/super-admin/basvurular", label: "Başvurular" },
   { href: "/super-admin/isletmeler", label: "İşletmeler" },
+  { href: "/super-admin/planlar", label: "Planlar" },
 ];
 
 export default async function SuperAdminLayout({ children }: { children: React.ReactNode }) {

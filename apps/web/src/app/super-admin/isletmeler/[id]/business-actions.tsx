@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { suspendBusiness, reactivateBusiness, extendTrial } from "./actions";
+import { suspendBusiness, reactivateBusiness, extendTrial, assignPlan } from "./actions";
 import type { SubscriptionStatus } from "@/lib/supabase/database.types";
 
 interface ActionState {
@@ -10,16 +10,26 @@ interface ActionState {
 
 const initialState: ActionState = { error: null };
 
+export interface PlanOption {
+  id: string;
+  name: string;
+}
+
 export function BusinessActions({
   businessId,
   subscriptionStatus,
+  plans,
+  currentPlanId,
 }: {
   businessId: string;
   subscriptionStatus: SubscriptionStatus;
+  plans: PlanOption[];
+  currentPlanId: string | null;
 }) {
   const suspendWithId = suspendBusiness.bind(null, businessId);
   const reactivateWithId = reactivateBusiness.bind(null, businessId);
   const extendWithId = extendTrial.bind(null, businessId);
+  const assignPlanWithId = assignPlan.bind(null, businessId);
 
   const [suspendState, suspendAction, suspendPending] = useActionState<ActionState, FormData>(
     suspendWithId,
@@ -33,8 +43,12 @@ export function BusinessActions({
     extendWithId,
     initialState
   );
+  const [planState, planAction, planPending] = useActionState<ActionState, FormData>(
+    assignPlanWithId,
+    initialState
+  );
 
-  const error = suspendState.error ?? reactivateState.error ?? extendState.error;
+  const error = suspendState.error ?? reactivateState.error ?? extendState.error ?? planState.error;
   const isSuspended = subscriptionStatus === "SUSPENDED";
 
   return (
@@ -95,6 +109,31 @@ export function BusinessActions({
             className="inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 bg-white px-4 text-sm font-medium text-zinc-900 hover:bg-zinc-50 disabled:opacity-60"
           >
             {extendPending ? "İşleniyor..." : "Uzat"}
+          </button>
+        </form>
+      </div>
+
+      <div className="border-t border-zinc-100 pt-4">
+        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-zinc-500">Plan</p>
+        <form action={planAction} className="flex items-end gap-3">
+          <select
+            name="plan_id"
+            defaultValue={currentPlanId ?? ""}
+            className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500"
+          >
+            <option value="">Plan yok</option>
+            {plans.map((plan) => (
+              <option key={plan.id} value={plan.id}>
+                {plan.name}
+              </option>
+            ))}
+          </select>
+          <button
+            type="submit"
+            disabled={planPending}
+            className="inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 bg-white px-4 text-sm font-medium text-zinc-900 hover:bg-zinc-50 disabled:opacity-60"
+          >
+            {planPending ? "Kaydediliyor..." : "Planı Ata"}
           </button>
         </form>
       </div>
