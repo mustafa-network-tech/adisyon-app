@@ -17,24 +17,23 @@
 --      kullanıcısı oluşturun (gerçek olması gerekmiyor, örn.
 --      rls-test-admin-a@example.com + rastgele şifre): sırasıyla
 --      admin_a, waiter_a, kitchen_a, cashier_a, admin_b rolleri için.
---   2. Aşağıdaki "test_users" INSERT'indeki 5 UUID'yi bu kullanıcıların
---      gerçek id'leriyle değiştirin.
+--   2. Aşağıdaki "Test kullanıcıları" bölümündeki UID eşlemesini bu
+--      kullanıcıların gerçek id'leriyle değiştirin.
 --   3. Bu dosyanın tamamını SQL Editor'de çalıştırın.
---   4. Çıkan NOTICE'lara bakın. Herhangi bir "FAIL" varsa gerçek bir RLS
+--   4. Çıkan WARNING/PASS mesajlarına bakın. Herhangi bir "FAIL" varsa gerçek bir RLS
 --      açığı var demektir -- migration'ları tekrar inceleyin.
 --   5. İşiniz bittiğinde Dashboard'dan bu 5 test kullanıcısını silin.
 -- ============================================================================
 
 begin;
 
--- ---- 1. Test kullanıcıları: BURAYI KENDİ UUID'LERİNİZLE DEĞİŞTİRİN ----
-create temporary table test_users (name text primary key, id uuid not null);
-insert into test_users (name, id) values
-  ('admin_a',   '11111111-1111-1111-1111-111111111111'),
-  ('waiter_a',  '22222222-2222-2222-2222-222222222222'),
-  ('kitchen_a', '33333333-3333-3333-3333-333333333333'),
-  ('cashier_a', '44444444-4444-4444-4444-444444444444'),
-  ('admin_b',   '55555555-5555-5555-5555-555555555555');
+-- ---- 1. Test kullanıcıları ----
+-- Gerçek auth.users UID eşlemesi:
+-- admin_a   = eecceeb6-504e-4a75-813b-99f19b61841b
+-- waiter_a  = 7d4ec330-d7e7-4d18-b394-9b1b26f68b9f
+-- kitchen_a = a0ceeb8a-0abf-4548-bc80-f9b8ac7970fb
+-- cashier_a = c0d2e232-69a0-48f3-be90-aac2f3957034
+-- admin_b   = a96dbfd3-8265-4840-a47a-9dbde237269e
 
 -- ---- 2. Test verisi (privileged rol olarak; ROLLBACK ile geri alınır) ----
 -- Bu blok, SQL Editor'ün bağlandığı varsayılan rolün (genellikle
@@ -48,28 +47,25 @@ values
   ('bbbbbbbb-0000-0000-0000-00000000000b', 'RLS Test İşletme B', true, 'ACTIVE');
 
 insert into public.business_memberships (user_id, business_id, role)
-select id, 'aaaaaaaa-0000-0000-0000-00000000000a', 'BUSINESS_ADMIN' from test_users where name = 'admin_a'
-union all
-select id, 'aaaaaaaa-0000-0000-0000-00000000000a', 'WAITER' from test_users where name = 'waiter_a'
-union all
-select id, 'aaaaaaaa-0000-0000-0000-00000000000a', 'KITCHEN' from test_users where name = 'kitchen_a'
-union all
-select id, 'aaaaaaaa-0000-0000-0000-00000000000a', 'CASHIER' from test_users where name = 'cashier_a'
-union all
-select id, 'bbbbbbbb-0000-0000-0000-00000000000b', 'BUSINESS_ADMIN' from test_users where name = 'admin_b';
+values
+  ('eecceeb6-504e-4a75-813b-99f19b61841b', 'aaaaaaaa-0000-0000-0000-00000000000a', 'BUSINESS_ADMIN'),
+  ('7d4ec330-d7e7-4d18-b394-9b1b26f68b9f', 'aaaaaaaa-0000-0000-0000-00000000000a', 'WAITER'),
+  ('a0ceeb8a-0abf-4548-bc80-f9b8ac7970fb', 'aaaaaaaa-0000-0000-0000-00000000000a', 'KITCHEN'),
+  ('c0d2e232-69a0-48f3-be90-aac2f3957034', 'aaaaaaaa-0000-0000-0000-00000000000a', 'CASHIER'),
+  ('a96dbfd3-8265-4840-a47a-9dbde237269e', 'bbbbbbbb-0000-0000-0000-00000000000b', 'BUSINESS_ADMIN');
 
 insert into public.areas (id, business_id, name) values
   ('aaaaaaaa-0000-0000-0000-0000000000a1', 'aaaaaaaa-0000-0000-0000-00000000000a', 'A Alanı'),
   ('bbbbbbbb-0000-0000-0000-0000000000b1', 'bbbbbbbb-0000-0000-0000-00000000000b', 'B Alanı');
 
 insert into public.restaurant_tables (id, business_id, area_id, name) values
-  ('aaaaaaaa-0000-0000-0000-0000000000t1', 'aaaaaaaa-0000-0000-0000-00000000000a', 'aaaaaaaa-0000-0000-0000-0000000000a1', 'A Masa 1'),
-  ('bbbbbbbb-0000-0000-0000-0000000000t1', 'bbbbbbbb-0000-0000-0000-00000000000b', 'bbbbbbbb-0000-0000-0000-0000000000b1', 'B Masa 1');
+  ('aaaaaaaa-0000-0000-0000-0000000000a2', 'aaaaaaaa-0000-0000-0000-00000000000a', 'aaaaaaaa-0000-0000-0000-0000000000a1', 'A Masa 1'),
+  ('bbbbbbbb-0000-0000-0000-0000000000b2', 'bbbbbbbb-0000-0000-0000-00000000000b', 'bbbbbbbb-0000-0000-0000-0000000000b1', 'B Masa 1');
 
 insert into public.categories (id, business_id, name) values
   ('aaaaaaaa-0000-0000-0000-0000000000c1', 'aaaaaaaa-0000-0000-0000-00000000000a', 'A Kategori');
 insert into public.products (id, business_id, category_id, name, price) values
-  ('aaaaaaaa-0000-0000-0000-0000000000p1', 'aaaaaaaa-0000-0000-0000-00000000000a', 'aaaaaaaa-0000-0000-0000-0000000000c1', 'A Ürün', 100);
+  ('aaaaaaaa-0000-0000-0000-0000000000a3', 'aaaaaaaa-0000-0000-0000-00000000000a', 'aaaaaaaa-0000-0000-0000-0000000000c1', 'A Ürün', 100);
 
 -- A işletmesinde bir sipariş + kalem + ödeme (gerçek admin/cashier
 -- eylemleriyle, ownership zincirini test etmek için).
@@ -79,16 +75,16 @@ insert into public.products (id, business_id, category_id, name, price) values
 -- bu yüzden bu INSERT'lerden ÖNCE auth.uid()'in doğru test kullanıcısına
 -- çözülmesi için request.jwt.claims'i set ediyoruz, yoksa opened_by/
 -- received_by NULL'a düşer ve NOT NULL constraint'i ihlal eder.
-select set_config('request.jwt.claims', json_build_object('sub', '22222222-2222-2222-2222-222222222222')::text, true);
+select set_config('request.jwt.claims', json_build_object('sub', '7d4ec330-d7e7-4d18-b394-9b1b26f68b9f', 'role', 'authenticated')::text, true);
 insert into public.orders (id, business_id, table_id, status, opened_by)
-values ('aaaaaaaa-0000-0000-0000-0000000000o1', 'aaaaaaaa-0000-0000-0000-00000000000a', 'aaaaaaaa-0000-0000-0000-0000000000t1', 'OPEN', '22222222-2222-2222-2222-222222222222');
+values ('aaaaaaaa-0000-0000-0000-0000000000a4', 'aaaaaaaa-0000-0000-0000-00000000000a', 'aaaaaaaa-0000-0000-0000-0000000000a2', 'OPEN', '7d4ec330-d7e7-4d18-b394-9b1b26f68b9f');
 
 insert into public.order_items (id, order_id, product_id, quantity)
-values ('aaaaaaaa-0000-0000-0000-0000000000i1', 'aaaaaaaa-0000-0000-0000-0000000000o1', 'aaaaaaaa-0000-0000-0000-0000000000p1', 1);
+values ('aaaaaaaa-0000-0000-0000-0000000000a5', 'aaaaaaaa-0000-0000-0000-0000000000a4', 'aaaaaaaa-0000-0000-0000-0000000000a3', 1);
 
-select set_config('request.jwt.claims', json_build_object('sub', '44444444-4444-4444-4444-444444444444')::text, true);
+select set_config('request.jwt.claims', json_build_object('sub', 'c0d2e232-69a0-48f3-be90-aac2f3957034', 'role', 'authenticated')::text, true);
 insert into public.payments (id, order_id, method, amount, received_by)
-values ('aaaaaaaa-0000-0000-0000-0000000000pay', 'aaaaaaaa-0000-0000-0000-0000000000o1', 'CASH', 100, '44444444-4444-4444-4444-444444444444');
+values ('aaaaaaaa-0000-0000-0000-0000000000a6', 'aaaaaaaa-0000-0000-0000-0000000000a4', 'CASH', 100, 'c0d2e232-69a0-48f3-be90-aac2f3957034');
 
 -- ---- 3. Test oturumu yardımcısı ----
 -- authenticated rolüne geçiyoruz (RLS'i asıl uygulayan rol budur;
@@ -101,10 +97,15 @@ create or replace function pg_temp.as_user(p_name text) returns void
 language plpgsql as $$
 declare v_id uuid;
 begin
-  select id into v_id from test_users where name = p_name;
-  if v_id is null then
-    raise exception 'Bilinmeyen test kullanıcısı: %', p_name;
-  end if;
+  v_id := case p_name
+    when 'admin_a' then 'eecceeb6-504e-4a75-813b-99f19b61841b'::uuid
+    when 'waiter_a' then '7d4ec330-d7e7-4d18-b394-9b1b26f68b9f'::uuid
+    when 'kitchen_a' then 'a0ceeb8a-0abf-4548-bc80-f9b8ac7970fb'::uuid
+    when 'cashier_a' then 'c0d2e232-69a0-48f3-be90-aac2f3957034'::uuid
+    when 'admin_b' then 'a96dbfd3-8265-4840-a47a-9dbde237269e'::uuid
+    else null
+  end;
+  if v_id is null then raise exception 'Bilinmeyen test kullanıcısı: %', p_name; end if;
   perform set_config('request.jwt.claims', json_build_object('sub', v_id, 'role', 'authenticated')::text, true);
 end;
 $$;
@@ -113,7 +114,7 @@ create or replace function pg_temp.expect_zero_rows(p_label text, p_count bigint
 language plpgsql as $$
 begin
   if p_count = 0 then
-    raise notice 'PASS: %', p_label;
+    raise warning 'PASS: %', p_label;
   else
     raise exception 'FAIL: % (% satır döndü, 0 bekleniyordu)', p_label, p_count;
   end if;
@@ -147,7 +148,7 @@ begin
   if (select count(*) from public.areas where id = 'bbbbbbbb-0000-0000-0000-0000000000b1' and name = 'HACKED') > 0 then
     raise exception 'FAIL: Business A admin, Business B''nin alanını güncelleyebildi';
   else
-    raise notice 'PASS: Business A admin, Business B''nin alanını güncelleyemedi (0 satır etkilendi)';
+    raise warning 'PASS: Business A admin, Business B''nin alanını güncelleyemedi (0 satır etkilendi)';
   end if;
 end $$;
 
@@ -173,12 +174,12 @@ select pg_temp.expect_zero_rows(
 -- KITCHEN'ın hiç void yapamayacağı şekilde kısıtlandı.)
 do $$
 begin
-  update public.order_items set status = 'VOID', void_reason = 'test' where id = 'aaaaaaaa-0000-0000-0000-0000000000i1';
+  update public.order_items set status = 'VOID', void_reason = 'test' where id = 'aaaaaaaa-0000-0000-0000-0000000000a5';
   raise exception 'FAIL: KITCHEN bir order_item''ı VOID yapabildi';
 exception
   when others then
     if sqlerrm like '%Not authorized to void%' then
-      raise notice 'PASS: KITCHEN order_item VOID yapamıyor (%)', sqlerrm;
+      raise warning 'PASS: KITCHEN order_item VOID yapamıyor (%)', sqlerrm;
     else
       raise; -- beklenmeyen farklı bir hata; olduğu gibi yükselt
     end if;
@@ -191,13 +192,14 @@ end $$;
 select pg_temp.as_user('admin_a');
 do $$
 begin
-  insert into public.platform_admins (user_id) select id from test_users where name = 'admin_a';
+  insert into public.platform_admins (user_id)
+  values ('eecceeb6-504e-4a75-813b-99f19b61841b');
   raise exception 'FAIL: BUSINESS_ADMIN kendini platform_admins''e ekleyebildi';
 exception
   when insufficient_privilege then
-    raise notice 'PASS: BUSINESS_ADMIN platform_admins''e yazamıyor (yetki hatası)';
+    raise warning 'PASS: BUSINESS_ADMIN platform_admins''e yazamıyor (yetki hatası)';
   when others then
-    raise notice 'PASS: BUSINESS_ADMIN platform_admins''e yazamıyor (%)', sqlerrm;
+    raise warning 'PASS: BUSINESS_ADMIN platform_admins''e yazamıyor (%)', sqlerrm;
 end $$;
 
 -- Bonus: business_memberships.role CHECK constraint'i PLATFORM_SUPER_ADMIN
@@ -205,11 +207,11 @@ end $$;
 do $$
 begin
   insert into public.business_memberships (user_id, business_id, role)
-  select id, 'aaaaaaaa-0000-0000-0000-00000000000a', 'PLATFORM_SUPER_ADMIN' from test_users where name = 'admin_b';
+  values ('a96dbfd3-8265-4840-a47a-9dbde237269e', 'aaaaaaaa-0000-0000-0000-00000000000a', 'PLATFORM_SUPER_ADMIN');
   raise exception 'FAIL: business_memberships.role PLATFORM_SUPER_ADMIN değerini kabul etti';
 exception
   when check_violation then
-    raise notice 'PASS: business_memberships.role PLATFORM_SUPER_ADMIN''ı reddediyor (check constraint)';
+    raise warning 'PASS: business_memberships.role PLATFORM_SUPER_ADMIN''ı reddediyor (check constraint)';
 end $$;
 
 -- ============================================================================
@@ -226,7 +228,7 @@ declare v_count bigint;
 begin
   select count(*) into v_count from public.payments where business_id = 'aaaaaaaa-0000-0000-0000-00000000000a';
   if v_count > 0 then
-    raise notice 'PASS: CASHIER (A) kendi işletmesinin ödemesini görebiliyor (% satır)', v_count;
+    raise warning 'PASS: CASHIER (A) kendi işletmesinin ödemesini görebiliyor (% satır)', v_count;
   else
     raise exception 'FAIL: CASHIER (A) kendi işletmesinin ödemesini bile göremiyor -- RLS fazla kısıtlayıcı';
   end if;
@@ -241,12 +243,12 @@ select pg_temp.as_user('waiter_a');
 do $$
 begin
   insert into public.orders (business_id, table_id, opened_by)
-  values ('aaaaaaaa-0000-0000-0000-00000000000a', 'bbbbbbbb-0000-0000-0000-0000000000t1', '22222222-2222-2222-2222-222222222222');
+  values ('aaaaaaaa-0000-0000-0000-00000000000a', 'bbbbbbbb-0000-0000-0000-0000000000b2', '7d4ec330-d7e7-4d18-b394-9b1b26f68b9f');
   raise exception 'FAIL: WAITER, business_id ile table_id''i uyuşmayan sahte bir sipariş açabildi';
 exception
   when others then
     if sqlerrm like '%must match%' then
-      raise notice 'PASS: business_id/table_id tutarsızlığı engellendi (%)', sqlerrm;
+      raise warning 'PASS: business_id/table_id tutarsızlığı engellendi (%)', sqlerrm;
     else
       raise;
     end if;
@@ -257,11 +259,11 @@ end $$;
 do $$
 begin
   insert into public.orders (business_id, table_id, opened_by)
-  values ('bbbbbbbb-0000-0000-0000-00000000000b', 'bbbbbbbb-0000-0000-0000-0000000000t1', '22222222-2222-2222-2222-222222222222');
+  values ('bbbbbbbb-0000-0000-0000-00000000000b', 'bbbbbbbb-0000-0000-0000-0000000000b2', '7d4ec330-d7e7-4d18-b394-9b1b26f68b9f');
   raise exception 'FAIL: WAITER (A), Business B''de sipariş açabildi';
 exception
   when others then
-    raise notice 'PASS: WAITER (A), Business B''de sipariş açamıyor (%)', sqlerrm;
+    raise warning 'PASS: WAITER (A), Business B''de sipariş açamıyor (%)', sqlerrm;
 end $$;
 
 -- ============================================================================
@@ -270,12 +272,12 @@ end $$;
 -- ============================================================================
 do $$
 begin
-  update public.orders set status = 'CANCELLED' where id = 'aaaaaaaa-0000-0000-0000-0000000000o1';
+  update public.orders set status = 'CANCELLED' where id = 'aaaaaaaa-0000-0000-0000-0000000000a4';
   raise exception 'FAIL: WAITER bir siparişi CANCELLED yapabildi';
 exception
   when others then
     if sqlerrm like '%cashier or business admin%' then
-      raise notice 'PASS: WAITER sipariş durumunu değiştiremiyor (%)', sqlerrm;
+      raise warning 'PASS: WAITER sipariş durumunu değiştiremiyor (%)', sqlerrm;
     else
       raise;
     end if;
@@ -289,9 +291,9 @@ end $$;
 do $$
 declare v_actual_opened_by uuid;
 begin
-  select opened_by into v_actual_opened_by from public.orders where id = 'aaaaaaaa-0000-0000-0000-0000000000o1';
-  if v_actual_opened_by = '22222222-2222-2222-2222-222222222222' then
-    raise notice 'PASS: orders.opened_by doğru şekilde sunucuda auth.uid()''den geldi';
+  select opened_by into v_actual_opened_by from public.orders where id = 'aaaaaaaa-0000-0000-0000-0000000000a4';
+  if v_actual_opened_by = '7d4ec330-d7e7-4d18-b394-9b1b26f68b9f' then
+    raise warning 'PASS: orders.opened_by doğru şekilde sunucuda auth.uid()''den geldi';
   else
     raise exception 'FAIL: orders.opened_by beklenen kullanıcı değil (%), forge edilebilir olabilir', v_actual_opened_by;
   end if;
@@ -299,7 +301,7 @@ end $$;
 
 do $$
 begin
-  raise notice '=== Tüm senaryolar tamamlandı. Yukarıda hiç FAIL yoksa RLS bu senaryolara karşı sağlam. ===';
+  raise warning '=== Tüm senaryolar tamamlandı. Yukarıda hiç FAIL yoksa RLS bu senaryolara karşı sağlam. ===';
 end $$;
 
 rollback;

@@ -48,6 +48,8 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.7
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -90,3 +92,32 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+  assets:
+    - assets/icon/
+
+# flutter_launcher_icons: generates mipmap-*/ic_launcher.png +
+# adaptive icon XML/values from assets/icon/*.png. PLACEHOLDER
+# branding (a plain "MK" monogram) -- replace icon.png and
+# icon_foreground.png with real artwork before any Play Store
+# submission, then re-run: dart run flutter_launcher_icons
+flutter_launcher_icons:
+  android: true
+  image_path: "assets/icon/icon.png"
+  adaptive_icon_background: "#18181B"
+  adaptive_icon_foreground: "assets/icon/icon_foreground.png"
+  min_sdk_android: 21
+
+# flutter_native_splash: generates the launch_background.xml +
+# Android 12+ splash screen resources. Same placeholder branding as
+# the launcher icon -- re-run after replacing the image:
+# dart run flutter_native_splash:create
+flutter_native_splash:
+  color: "#18181B"
+  image: "assets/icon/icon_foreground.png"
+  android_12:
+    color: "#18181B"
+    image: "assets/icon/icon_foreground.png"
+  android: true
+  ios: false
+  web: false
