@@ -1,0 +1,29 @@
+# Node / Next.js
+node_modules/
+.next/
+out/
+.env
+.env.local
+.env*.local
+npm-debug.log*
+
+# Flutter / Dart
+apps/mobile/.dart_tool/
+apps/mobile/.flutter-plugin-dependencies
+apps/mobile/build/
+apps/mobile/.gradle/
+apps/mobile/android/local.properties
+apps/mobile/android/key.properties
+apps/mobile/**/*.keystore
+apps/mobile/**/*.jks
+**/generated_plugin_registrant.dart
+
+# Supabase local dev
+supabase/.branches/
+supabase/.temp/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
