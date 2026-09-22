@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { getSessionContext, getCashierContext } from "@/lib/auth/session";
 import { SignOutButton } from "@/components/sign-out-button";
 
@@ -30,7 +31,12 @@ export default async function KasaLayout({ children }: { children: React.ReactNo
     <div className="flex min-h-screen flex-1 flex-col bg-zinc-100">
       <header className="flex items-center justify-between border-b border-zinc-200 bg-white px-6 py-3">
         <p className="text-base font-semibold text-zinc-900">{cashierCtx.businessName} · Kasa</p>
-        <SignOutButton className="text-sm font-medium text-zinc-600 hover:text-zinc-900" />
+        <div className="flex items-center gap-5">
+          <Link href="/raporlar" className="text-sm font-medium text-zinc-600 hover:text-zinc-900">
+            Raporlar
+          </Link>
+          <SignOutButton className="text-sm font-medium text-zinc-600 hover:text-zinc-900" />
+        </div>
       </header>
       <main className="flex-1">{children}</main>
     </div>

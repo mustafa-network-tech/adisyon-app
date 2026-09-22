@@ -10,6 +10,7 @@ const navLinks = [
   { href: "/isletme/kategoriler", label: "Kategoriler" },
   { href: "/isletme/urunler", label: "Ürünler" },
   { href: "/isletme/personel", label: "Personel" },
+  { href: "/raporlar", label: "Raporlar" },
   { href: "/isletme/ayarlar", label: "Ayarlar" },
 ];
 

@@ -412,6 +412,21 @@ export interface Database {
         };
         Returns: string;
       };
+      get_revenue_summary: {
+        Args: { p_business_id: string; p_start: string; p_end: string };
+        Returns: {
+          total_revenue: number;
+          cash_total: number;
+          card_total: number;
+          other_total: number;
+          order_count: number;
+          average_order: number;
+        }[];
+      };
+      get_top_products: {
+        Args: { p_business_id: string; p_start: string; p_end: string; p_limit?: number };
+        Returns: { product_name: string; total_quantity: number; total_revenue: number }[];
+      };
     };
   };
 }

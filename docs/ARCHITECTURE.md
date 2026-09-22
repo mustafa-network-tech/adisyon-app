@@ -277,6 +277,21 @@ personele ödeme "yazdırabilirdi", kapatıldı). `payments` VOID akışı
 akışı gerektirir — bilinçli olarak bu faza dahil edilmedi, manuel/admin
 müdahalesi olarak kalıyor).
 
+**Faz 8 notları (`20260922000021_reporting_functions.sql`):** Raporlar
+(`get_revenue_summary`, `get_top_products`) düz SQL fonksiyonları olarak
+yazıldı — SECURITY DEFINER **değil**, çağıranın kendi RLS'i altında
+çalışıyorlar. Bu bilinçli bir tercih: fonksiyon `p_business_id`
+parametresini client'tan alsa bile, altındaki `payments`/`order_items`
+sorguları hâlâ `is_business_member(row.business_id)` politikasına tabi;
+biri başka bir işletmenin id'sini geçse bile sıfır satır döner, gerçek
+veri sızmaz — fonksiyonun içine ayrıca bir yetki kontrolü eklemeye
+gerek kalmadı. `/raporlar` web'de yeni bir rota; hem BUSINESS_ADMIN hem
+CASHIER'a açık (`getReportsContext`, ortak `getMembershipContext`
+artık tek bir rol yerine rol listesi de kabul ediyor). Flutter tarafı
+bu fazda yok — master prompt'un faz listesinde yalnızca bu fazda
+"Flutter" ön eki geçmiyor (Faz 5/6/7'nin aksine), rapor ekranları
+doğası gereği masaüstü/web odaklı.
+
 Bu ortamda Supabase CLI kurulu değil (`supabase` komutu bulunamadı).
 Migration'ları uygulamak için:
 

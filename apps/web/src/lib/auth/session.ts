@@ -42,12 +42,15 @@ export interface MembershipContext {
   businessName: string;
 }
 
-// Resolves the business a user holds a given role in. A user could in
-// principle hold the same role in more than one business (multi-tenant
-// staff, section 5 of the architecture doc); for now we just take the
-// first active one -- a business switcher is future work once that's a
-// real scenario, not a guess worth building ahead of need.
-async function getMembershipContext(role: MembershipRole): Promise<MembershipContext | null> {
+// Resolves the business a user holds one of the given roles in. A user
+// could in principle hold the same role in more than one business
+// (multi-tenant staff, section 5 of the architecture doc); for now we
+// just take the first active match -- a business switcher is future
+// work once that's a real scenario, not a guess worth building ahead of
+// need.
+async function getMembershipContext(
+  roles: MembershipRole | MembershipRole[]
+): Promise<MembershipContext | null> {
   const supabase = await createClient();
 
   const {
@@ -60,7 +63,7 @@ async function getMembershipContext(role: MembershipRole): Promise<MembershipCon
     .from("business_memberships")
     .select("business_id, businesses(name)")
     .eq("user_id", user.id)
-    .eq("role", role)
+    .in("role", Array.isArray(roles) ? roles : [roles])
     .eq("active", true)
     .limit(1)
     .maybeSingle();
@@ -87,4 +90,11 @@ export function getKitchenContext() {
 export type CashierContext = MembershipContext;
 export function getCashierContext() {
   return getMembershipContext("CASHIER");
+}
+
+// Reports (section 20 of the architecture doc) are available to both
+// the business admin and cashier roles.
+export type ReportsContext = MembershipContext;
+export function getReportsContext() {
+  return getMembershipContext(["BUSINESS_ADMIN", "CASHIER"]);
 }
