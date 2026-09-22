@@ -3,9 +3,14 @@
 MK Adisyon - restoran ve kafeler icin adisyon ve POS uygulamasi
 
 Faz 4: Supabase Auth, oturum yönetimi, rol bazlı yönlendirme (WAITER /
-KITCHEN / CASHIER / BUSINESS_ADMIN / platform admin uyarısı). Gerçek
-garson/mutfak/kasa ekranları Faz 5–7'de bu iskelet üzerine eklenecek —
-bkz. [../../docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md).
+KITCHEN / CASHIER / BUSINESS_ADMIN / platform admin uyarısı).
+
+Faz 5: Garson akışı tam çalışır durumda — alan seçimi → masa ızgarası
+(canlı, Realtime) → masa açma → ürün/kategori seçimi → adet/not → sepeti
+mutfağa gönderme → sipariş durumu takibi → hesap isteme → (yalnızca
+henüz `NEW` durumundaki kalemler için) iptal. `lib/features/waiter/`
+altında. Mutfak/kasa ekranları Faz 6–7'de eklenecek — bkz.
+[../../docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md).
 
 ## Çalıştırma
 

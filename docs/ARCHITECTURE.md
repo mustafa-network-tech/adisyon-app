@@ -233,6 +233,22 @@ katmanında" olacağı notuyla bırakılmıştı; Faz 3'te işletme ayarları
 ekranı gerçek yazma erişimi kullandığı için veritabanı seviyesine
 taşındı).
 
+**Faz 5 güncellemeleri (`20260922000019_order_lifecycle_and_waiter_guards.sql`):**
+`restaurant_tables.status` artık tamamen `orders`'tan türetiliyor (bir
+trigger ile) — masa açıldığında OCCUPIED, hesap istendiğinde
+CHECK_REQUESTED, sipariş kapandığında/iptal olduğunda AVAILABLE; client
+artık bunu ayrıca güncellemek zorunda değil ve unutamaz. Aynı masada
+aynı anda birden fazla OPEN sipariş açılmasını engelleyen bir partial
+unique index eklendi (iki garsonun aynı masayı eş zamanlı açması gibi
+bir yarış durumuna karşı). `order_items` VOID akışı sıkılaştırıldı:
+`voided_by`/`voided_at` artık her zaman sunucuda `auth.uid()`/`now()`'dan
+alınıyor (client'ın başka birinin id'sini yazabilmesi kapatıldı),
+`void_reason` zorunlu hale getirildi, ve WAITER yalnızca hâlâ `NEW`
+durumundaki bir kalemi iptal edebiliyor (mutfak hazırlamaya başladıktan
+sonra iptal CASHIER/BUSINESS_ADMIN yetkisi gerektiriyor); KITCHEN hiç
+VOID yapamıyor. `restaurant_tables` realtime publication'a eklendi
+(garson masa ızgarasının canlı güncellenmesi için).
+
 Bu ortamda Supabase CLI kurulu değil (`supabase` komutu bulunamadı).
 Migration'ları uygulamak için:
 

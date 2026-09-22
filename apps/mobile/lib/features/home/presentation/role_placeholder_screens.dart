@@ -2,24 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../../core/widgets/info_screen.dart';
 
-/// Faz 4 only wires up auth/session/role-routing -- each role's real
-/// screen (masa/menü/sipariş for the waiter, canlı sipariş kartları for
-/// the kitchen, ödeme/hesap kapatma for the cashier) is built in its own
-/// later phase (Faz 5/6/7). These placeholders confirm routing landed on
-/// the right screen and let the app be run/tested end-to-end today.
-
-class WaiterHomeScreen extends StatelessWidget {
-  const WaiterHomeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const InfoScreen(
-      icon: Icons.restaurant_outlined,
-      title: 'Garson',
-      message: 'Masa ve sipariş ekranı Faz 5\'te burada olacak.',
-    );
-  }
-}
+/// Faz 4 only wired up auth/session/role-routing -- each role's real
+/// screen is built in its own later phase. The waiter's real home now
+/// lives in features/waiter/presentation/waiter_home_screen.dart (Faz 5);
+/// kitchen (Faz 6) and cashier (Faz 7) are still placeholders below.
 
 class KitchenHomeScreen extends StatelessWidget {
   const KitchenHomeScreen({super.key});

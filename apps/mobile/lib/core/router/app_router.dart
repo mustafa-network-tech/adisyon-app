@@ -5,6 +5,9 @@ import '../../features/auth/application/auth_providers.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/home/presentation/role_placeholder_screens.dart';
 import '../../features/splash/presentation/splash_screen.dart';
+import '../../features/waiter/presentation/menu_screen.dart';
+import '../../features/waiter/presentation/table_screen.dart';
+import '../../features/waiter/presentation/waiter_home_screen.dart';
 import 'app_routes.dart';
 import 'go_router_refresh_stream.dart';
 
@@ -48,6 +51,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.waiterHome,
         builder: (context, state) => const WaiterHomeScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.waiterTablePattern,
+        builder: (context, state) =>
+            TableScreen(tableId: state.pathParameters['tableId']!),
+      ),
+      GoRoute(
+        path: AppRoutes.waiterMenuPattern,
+        builder: (context, state) =>
+            MenuScreen(tableId: state.pathParameters['tableId']!),
       ),
       GoRoute(
         path: AppRoutes.kitchenHome,
