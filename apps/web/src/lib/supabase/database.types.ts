@@ -23,6 +23,7 @@ export interface Database {
           id: string;
           full_name: string | null;
           phone: string | null;
+          email: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -199,7 +200,15 @@ export interface Database {
           name: string;
         };
         Update: Partial<Database["public"]["Tables"]["restaurant_tables"]["Row"]>;
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_tables_area_id_fkey";
+            columns: ["area_id"];
+            isOneToOne: false;
+            referencedRelation: "areas";
+            referencedColumns: ["id"];
+          }
+        ];
       };
       categories: {
         Row: {
@@ -237,7 +246,15 @@ export interface Database {
           price: number;
         };
         Update: Partial<Database["public"]["Tables"]["products"]["Row"]>;
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "products_category_id_fkey";
+            columns: ["category_id"];
+            isOneToOne: false;
+            referencedRelation: "categories";
+            referencedColumns: ["id"];
+          }
+        ];
       };
       orders: {
         Row: {

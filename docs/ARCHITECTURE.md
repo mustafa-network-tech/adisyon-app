@@ -221,6 +221,18 @@ Bkz. master prompt bölüm 36 — aynen uygulanacak (FAZ 1 → FAZ 12).
 
 ## 16. Notlar
 
+**Faz 3 güncellemeleri (`20260922000018_profiles_email_and_business_guard.sql`):**
+`profiles`'a `email` kolonu eklendi (business admin'in servis rolüne
+ihtiyaç duymadan kendi personel listesini görebilmesi için,
+`auth.users.email`'den denormalize edilir). Ayrıca `businesses` tablosuna
+bir trigger eklendi: `BUSINESS_ADMIN` kendi işletmesini güncelleyebilir
+ama `subscription_status`/`plan_id`/`trial_started_at`/`trial_ends_at`/
+`active` alanlarını **değiştiremez** — bunlar yalnızca platform admin
+tarafından değiştirilebilir (Faz 1'de bu kısıtlama yalnızca "uygulama
+katmanında" olacağı notuyla bırakılmıştı; Faz 3'te işletme ayarları
+ekranı gerçek yazma erişimi kullandığı için veritabanı seviyesine
+taşındı).
+
 Bu ortamda Supabase CLI kurulu değil (`supabase` komutu bulunamadı).
 Migration'ları uygulamak için:
 

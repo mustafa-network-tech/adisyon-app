@@ -1,16 +1,19 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getSessionContext } from "@/lib/auth/session";
+import { getSessionContext, getBusinessAdminContext } from "@/lib/auth/session";
 import { SignOutButton } from "@/components/sign-out-button";
 
-// Generic post-login landing page: routes a platform admin straight to
-// their panel; everyone else (business staff roles) lands here with a
-// clear status message, since the business-facing dashboards
-// (BUSINESS_ADMIN/CASHIER/WAITER/KITCHEN) are built in later phases.
+// Generic post-login landing page: routes a platform admin or business
+// admin straight to their panel; everyone else (CASHIER/WAITER/KITCHEN)
+// lands here with a clear status message, since those web dashboards are
+// built in later phases (their primary surface is the Flutter app).
 export default async function HesabimPage() {
   const ctx = await getSessionContext();
   if (!ctx) redirect("/giris");
   if (ctx.isPlatformAdmin) redirect("/super-admin");
+
+  const businessAdminCtx = await getBusinessAdminContext();
+  if (businessAdminCtx) redirect("/isletme");
 
   const supabase = await createClient();
   const { data: memberships } = await supabase
@@ -26,7 +29,7 @@ export default async function HesabimPage() {
         </h1>
         <p className="mt-2 text-sm leading-6 text-zinc-600">
           {memberships && memberships.length > 0
-            ? "İşletme yönetim paneliniz yakında aktif olacak."
+            ? "Bu rol için web paneli yakında aktif olacak. Şimdilik MK Adisyon mobil uygulamasını kullanabilirsiniz."
             : "Hesabınız henüz bir işletmeye tanımlanmamış. Lütfen işletme yöneticinizle iletişime geçin."}
         </p>
         <div className="mt-6">
