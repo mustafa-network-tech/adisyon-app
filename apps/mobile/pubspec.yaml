@@ -38,6 +38,8 @@ dependencies:
   flutter_riverpod: ^3.3.2
   go_router: ^17.2.3
   url_launcher: ^6.3.2
+  in_app_purchase: ^3.2.3
+  in_app_purchase_android: ^0.4.0+10
 
 dev_dependencies:
   flutter_test:
@@ -98,10 +100,9 @@ flutter:
     - assets/icon/
 
 # flutter_launcher_icons: generates mipmap-*/ic_launcher.png +
-# adaptive icon XML/values from assets/icon/*.png. PLACEHOLDER
-# branding (a plain "MK" monogram) -- replace icon.png and
-# icon_foreground.png with real artwork before any Play Store
-# submission, then re-run: dart run flutter_launcher_icons
+# adaptive icon XML/values from assets/icon/*.png (receipt + check
+# badge on zinc-900). Play Store listing graphics live in assets/store/.
+# After replacing the artwork, re-run: dart run flutter_launcher_icons
 flutter_launcher_icons:
   android: true
   image_path: "assets/icon/icon.png"
@@ -110,8 +111,8 @@ flutter_launcher_icons:
   min_sdk_android: 21
 
 # flutter_native_splash: generates the launch_background.xml +
-# Android 12+ splash screen resources. Same placeholder branding as
-# the launcher icon -- re-run after replacing the image:
+# Android 12+ splash screen resources, from the launcher icon
+# foreground -- re-run after replacing the image:
 # dart run flutter_native_splash:create
 flutter_native_splash:
   color: "#18181B"

@@ -47,7 +47,7 @@ export default async function BasvurularPage({
       <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Başvurular (Arşiv)</h1>
       <p className="mt-1 text-sm text-zinc-600">
         Bu akış kaldırıldı — işletmeler artık kendi hesaplarını oluşturarak (self-service)
-        otomatik 7 günlük deneme ile başlıyor. Aşağıdaki liste yalnızca eski başvuruların
+        Abonelik Ayarları&apos;ndaki süreye göre otomatik uygulama denemesi ile başlıyor. Aşağıdaki liste yalnızca eski başvuruların
         geçmiş kaydıdır.
       </p>
 

@@ -7,7 +7,7 @@ export default function KayitBeklemedePage() {
         </h1>
         <p className="mt-2 text-sm leading-6 text-zinc-600">
           Hesabınızı oluşturduk. Devam etmek için e-posta adresinize gönderdiğimiz onay
-          bağlantısına tıklayın — işletmeniz ve 7 günlük deneme süreniz o anda başlayacak.
+          bağlantısına tıklayın — işletmeniz ve varsa ücretsiz deneme süreniz o anda başlayacak.
         </p>
       </div>
     </div>

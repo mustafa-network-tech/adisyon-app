@@ -9,6 +9,7 @@ const navLinks = [
   { href: "/super-admin/isletmeler", label: "İşletmeler" },
   { href: "/super-admin/abonelikler", label: "Abonelikler" },
   { href: "/super-admin/planlar", label: "Planlar" },
+  { href: "/super-admin/ayarlar", label: "Abonelik Ayarları" },
   { href: "/super-admin/destek", label: "Destek" },
   { href: "/super-admin/audit", label: "Denetim Kaydı" },
 ];

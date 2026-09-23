@@ -9,13 +9,14 @@ export default async function QrMenuAdminPage() {
   if (!ctx) redirect("/hesabim");
 
   const supabase = await createClient();
-  const { data: business } = await supabase
-    .from("businesses")
-    .select("plans(qr_menu_enabled)")
-    .eq("id", ctx.businessId)
-    .single();
-
-  const qrMenuEnabled = (business?.plans as { qr_menu_enabled: boolean } | null)?.qr_menu_enabled ?? false;
+  // Same rule as the public menu RPCs: the plan whose rights apply right
+  // now (top plan during a free period) must include QR menu, and the
+  // business must be operational.
+  const { data: entitlementRows } = await supabase.rpc("get_business_entitlement", {
+    p_business_id: ctx.businessId,
+  });
+  const entitlement = entitlementRows?.[0];
+  const qrMenuEnabled = Boolean(entitlement?.qr_menu_enabled && entitlement.is_operational);
 
   if (!qrMenuEnabled) {
     return (

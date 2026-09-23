@@ -6,6 +6,8 @@ import '../../../core/router/app_routes.dart';
 import '../../../core/widgets/info_screen.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../auth/application/role_context.dart';
+import '../../subscription/application/subscription_providers.dart';
+import '../../subscription/domain/models.dart';
 
 /// Faz 4 only wired up auth/session/role-routing -- each role's real
 /// screen is built in its own later phase. The waiter's real home lives
@@ -22,6 +24,10 @@ class BusinessAdminHomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final businessName =
         ref.watch(roleContextProvider).value?.businessName ?? 'MK Adisyon';
+    // Keeps the Google Play purchase listener alive for the admin so a
+    // purchase whose verification was interrupted is re-verified.
+    ref.watch(purchaseControllerProvider);
+    final entitlement = ref.watch(entitlementProvider).value;
 
     return Scaffold(
       appBar: AppBar(
@@ -37,6 +43,10 @@ class BusinessAdminHomeScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          if (entitlement != null) ...[
+            _AccessBanner(entitlement: entitlement),
+            const SizedBox(height: 12),
+          ],
           Card(
             child: ListTile(
               contentPadding: const EdgeInsets.symmetric(
@@ -69,6 +79,74 @@ class BusinessAdminHomeScreen extends ConsumerWidget {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Server-computed access state (days left use the database clock).
+/// Without an active trial or subscription the admin is pointed straight
+/// to the subscription screen.
+class _AccessBanner extends StatelessWidget {
+  const _AccessBanner({required this.entitlement});
+
+  final Entitlement entitlement;
+
+  @override
+  Widget build(BuildContext context) {
+    final (
+      String? text,
+      Color background,
+      Color foreground,
+    ) = switch (entitlement.accessSource) {
+      AccessSource.appTrial => (
+        'Ücretsiz denemenizin ${entitlement.appTrialDaysLeft} günü kaldı. '
+            'Tüm özellikler açık.',
+        Colors.amber.shade50,
+        Colors.amber.shade900,
+      ),
+      AccessSource.playTrial => (
+        'Google Play ücretsiz döneminiz sürüyor. Tüm özellikler açık.',
+        Colors.green.shade50,
+        Colors.green.shade900,
+      ),
+      AccessSource.suspended => (
+        'Hesabınız askıya alındı. Lütfen destek ile iletişime geçin.',
+        Colors.red.shade50,
+        Colors.red.shade900,
+      ),
+      _ when !entitlement.isOperational => (
+        'Aktif bir deneme veya aboneliğiniz yok; yeni adisyon açılamaz. '
+            'Devam etmek için bir plan seçin.',
+        Colors.red.shade50,
+        Colors.red.shade900,
+      ),
+      _ => (null, Colors.transparent, Colors.transparent),
+    };
+    if (text == null) return const SizedBox.shrink();
+
+    final needsAction =
+        !entitlement.isOperational &&
+        entitlement.accessSource != AccessSource.suspended;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(text, style: TextStyle(color: foreground)),
+          if (needsAction) ...[
+            const SizedBox(height: 12),
+            ElevatedButton(
+              onPressed: () =>
+                  context.push(AppRoutes.businessAdminSubscription),
+              child: const Text('Planları Gör'),
+            ),
+          ],
         ],
       ),
     );

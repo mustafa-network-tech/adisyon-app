@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { getCatalogPlans, TRIAL_DAYS } from "@/lib/plans";
+import { getCatalogPlans, getTrialSettings } from "@/lib/plans";
 import { PlanComparison } from "@/components/plan-comparison";
 
 export const metadata = {
@@ -11,7 +11,7 @@ export const metadata = {
 // needs no session.
 export default async function FiyatlandirmaPage() {
   const supabase = await createClient();
-  const plans = await getCatalogPlans(supabase);
+  const [plans, trial] = await Promise.all([getCatalogPlans(supabase), getTrialSettings(supabase)]);
 
   return (
     <div className="mx-auto w-full max-w-5xl px-6 py-16">
@@ -20,10 +20,13 @@ export default async function FiyatlandirmaPage() {
           MK Adisyon
         </Link>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight text-zinc-900">Planlar</h1>
-        <p className="mx-auto mt-3 max-w-xl text-base leading-7 text-zinc-600">
-          Yeni işletmeler {TRIAL_DAYS} gün ücretsiz deneme ile başlar. Deneme için ödeme bilgisi
-          istenmez.
-        </p>
+        {trial.appTrialDays > 0 && (
+          <p className="mx-auto mt-3 max-w-xl text-base leading-7 text-zinc-600">
+            Yeni işletmeler {trial.appTrialDays} gün ücretsiz deneme ile başlar; deneme için ödeme
+            bilgisi istenmez.
+            {trial.trialPlanName && ` Deneme süresince ${trial.trialPlanName} planının tüm özellikleri açıktır.`}
+          </p>
+        )}
       </div>
 
       <div className="mt-10">
@@ -31,8 +34,9 @@ export default async function FiyatlandirmaPage() {
       </div>
 
       <p className="mt-6 text-center text-sm text-zinc-500">
-        Ücretli abonelikler yakında MK Adisyon Android uygulamasından Google Play ile satın
-        alınabilecek. Satın alma sırasında Google Play&apos;de gösterilen fiyat esastır.
+        Abonelikler MK Adisyon Android uygulamasından Google Play ile başlatılır. Google Play&apos;de
+        geçerli bir kampanya varsa (örneğin ücretsiz dönem) uygulamada gösterilir; satın alma
+        sırasında Google Play&apos;de gösterilen fiyat ve koşullar esastır.
       </p>
 
       <div className="mt-12 grid gap-4 md:grid-cols-2">

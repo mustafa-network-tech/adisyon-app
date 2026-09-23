@@ -10,6 +10,33 @@ export type SubscriptionStatus =
   | "EXPIRED"
   | "SUSPENDED"
   | "CANCELLED";
+export type AccessSource = "APP_TRIAL" | "PLAY_TRIAL" | "PLAY_SUBSCRIPTION" | "MANUAL" | "SUSPENDED" | "NONE";
+
+export interface BusinessEntitlement {
+  subscription_status: SubscriptionStatus;
+  is_operational: boolean;
+  access_source: AccessSource;
+  app_trial_ends_at: string;
+  app_trial_days_left: number | null;
+  subscribed_plan_id: string | null;
+  subscribed_plan_code: string | null;
+  subscribed_plan_name: string | null;
+  effective_plan_id: string | null;
+  effective_plan_code: string | null;
+  effective_plan_name: string | null;
+  max_tables: number | null;
+  max_waiters: number | null;
+  max_areas: number | null;
+  qr_menu_enabled: boolean;
+  play_product_id: string | null;
+  play_base_plan_id: string | null;
+  play_purchase_state: GooglePlayPurchaseState | null;
+  play_expiry_time: string | null;
+  play_auto_renewing: boolean | null;
+  play_in_free_trial: boolean | null;
+  server_now: string;
+}
+
 export type BillingPeriod = "MONTHLY" | "YEARLY";
 export type GooglePlayPurchaseState =
   | "PENDING"
@@ -50,6 +77,18 @@ export interface Database {
         Row: { user_id: string; created_at: string };
         Insert: { user_id: string; created_at?: string };
         Update: Partial<{ user_id: string; created_at: string }>;
+        Relationships: [];
+      };
+      subscription_settings: {
+        Row: {
+          id: boolean;
+          app_trial_days: number;
+          trial_plan_code: string;
+          updated_at: string;
+        };
+        Insert: never;
+        // Platform admin only (RLS); single row.
+        Update: { app_trial_days?: number; trial_plan_code?: string };
         Relationships: [];
       };
       plans: {
@@ -478,6 +517,8 @@ export interface Database {
           expiry_time: string | null;
           last_verified_at: string | null;
           raw_verification_response: Record<string, unknown>;
+          in_free_trial: boolean;
+          linked_purchase_token: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -562,6 +603,28 @@ export interface Database {
           expiry_time: string | null;
           last_verified_at: string | null;
         }[];
+      };
+      get_business_entitlement: {
+        Args: { p_business_id: string };
+        Returns: BusinessEntitlement[];
+      };
+      // service_role only (called from /api/play/*).
+      record_google_play_subscription: {
+        Args: {
+          p_business_id: string;
+          p_product_id: string;
+          p_base_plan_id: string | null;
+          p_purchase_token: string;
+          p_linked_purchase_token: string | null;
+          p_order_id: string | null;
+          p_purchase_state: GooglePlayPurchaseState;
+          p_auto_renewing: boolean;
+          p_in_free_trial: boolean;
+          p_start_time: string | null;
+          p_expiry_time: string | null;
+          p_raw_verification_response: Record<string, unknown>;
+        };
+        Returns: { purchase_id: string; business_status: string | null; subscribed_plan_code: string | null }[];
       };
       get_revenue_summary: {
         Args: { p_business_id: string; p_start: string; p_end: string };

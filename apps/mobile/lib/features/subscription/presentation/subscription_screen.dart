@@ -1,31 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/config/app_config.dart';
 import '../../../core/utils/currency.dart';
 import '../application/subscription_providers.dart';
 import '../domain/models.dart';
+import '../domain/play_offers.dart';
 
-/// Plan catalog + the business's own subscription state, for
-/// BUSINESS_ADMIN only.
-///
-/// Google Play Billing is NOT wired up yet: there is no purchase flow and
-/// nothing here can change the plan. When billing is added, the purchase
-/// button launches the Play flow with the plan's product/base plan from
-/// the `plans` table, shows Play's localized price instead of the list
-/// price, and sends the purchase token to the server-side verification
-/// job -- the subscription only changes once that job has verified it
-/// (see docs/GOOGLE_PLAY_BILLING.md).
+/// Plan catalog, the business's entitlement and Google Play purchasing,
+/// for BUSINESS_ADMIN only. Prices and campaign text come from Google
+/// Play; the subscription only changes after the server verified the
+/// purchase with Google (see PurchaseController).
 class SubscriptionScreen extends ConsumerWidget {
   const SubscriptionScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final catalogAsync = ref.watch(planCatalogProvider);
-    final subscriptionAsync = ref.watch(businessSubscriptionProvider);
+    final entitlementAsync = ref.watch(entitlementProvider);
+    final offersAsync = ref.watch(playOffersProvider);
+
+    ref.listen(purchaseControllerProvider, (previous, next) {
+      final message = next.message;
+      if (message == null || previous?.message == message) return;
+      if (next.status == PurchaseFlowStatus.success ||
+          next.status == PurchaseFlowStatus.error ||
+          next.status == PurchaseFlowStatus.pending) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(content: Text(message)));
+      }
+    });
 
     Future<void> refresh() async {
       ref.invalidate(planCatalogProvider);
-      ref.invalidate(businessSubscriptionProvider);
+      ref.invalidate(entitlementProvider);
+      ref.invalidate(playOffersProvider);
       await ref.read(planCatalogProvider.future);
     }
 
@@ -34,89 +45,113 @@ class SubscriptionScreen extends ConsumerWidget {
       body: catalogAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => _ErrorState(onRetry: refresh),
-        data: (plans) => RefreshIndicator(
-          onRefresh: refresh,
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              subscriptionAsync.when(
-                loading: () => const Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Center(child: CircularProgressIndicator()),
+        data: (plans) {
+          final entitlement = entitlementAsync.value;
+          final offers = offersAsync.value;
+          final offersLoading = offersAsync.isLoading;
+          return RefreshIndicator(
+            onRefresh: refresh,
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                entitlementAsync.when(
+                  loading: () => const Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                  error: (error, _) => const _Notice(
+                    text: 'Abonelik durumu şu an yüklenemedi.',
+                    tone: _NoticeTone.warning,
+                  ),
+                  data: (value) => value == null
+                      ? const SizedBox.shrink()
+                      : _StatusSection(entitlement: value),
                 ),
-                error: (error, _) => const _Notice(
-                  text: 'Abonelik durumu şu an yüklenemedi.',
-                  tone: _NoticeTone.warning,
+                const SizedBox(height: 24),
+                Text(
+                  'Planlar',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-                data: (subscription) => subscription == null
-                    ? const SizedBox.shrink()
-                    : _StatusSection(subscription: subscription),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'Planlar',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 12),
-              _PeriodToggle(plans: plans),
-              const SizedBox(height: 16),
-              _PlanCards(
-                plans: plans,
-                currentPlanId: subscriptionAsync.value?.planId,
-              ),
-              const SizedBox(height: 16),
-              const _Notice(
-                text:
-                    'Google Play ile abonelik satın alma henüz etkin değil. '
-                    'Satın alma açıldığında, ödeme sırasında Google Play\'in '
-                    'gösterdiği fiyat geçerli olacaktır.',
-                tone: _NoticeTone.info,
-              ),
-            ],
-          ),
-        ),
+                const SizedBox(height: 12),
+                _PeriodToggle(plans: plans),
+                const SizedBox(height: 16),
+                if (!offersLoading && offers == null) ...[
+                  const _Notice(
+                    text:
+                        'Abonelik servisi şu an kullanılamıyor. Planları '
+                        'inceleyebilirsiniz; satın alma açıldığında burada '
+                        'Google Play fiyatları görünecek.',
+                    tone: _NoticeTone.warning,
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                _PlanCards(
+                  plans: plans,
+                  entitlement: entitlement,
+                  offers: offers,
+                  offersLoading: offersLoading,
+                ),
+                const SizedBox(height: 16),
+                const _Notice(
+                  text:
+                      'Abonelik Google Play üzerinden alınır ve siz iptal '
+                      'edene kadar seçtiğiniz dönem sonunda otomatik yenilenir. '
+                      'Ücretsiz dönem içeren bir teklifte, dönem bitmeden iptal '
+                      'etmezseniz ücretli abonelik başlar. İptal ve ödeme '
+                      'yöntemi: Google Play > Ödemeler ve abonelikler.',
+                  tone: _NoticeTone.info,
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
 }
 
 class _StatusSection extends StatelessWidget {
-  const _StatusSection({required this.subscription});
+  const _StatusSection({required this.entitlement});
 
-  final BusinessSubscription subscription;
+  final Entitlement entitlement;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final muted = textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600);
-    final now = DateTime.now();
 
-    String? detail;
-    if (subscription.isTrial) {
-      final daysLeft = subscription.trialDaysLeft(now);
-      detail = daysLeft > 0
-          ? 'Denemenin bitmesine $daysLeft gün kaldı. Deneme süresince '
-                'limitler uygulanmaz.'
-          : 'Deneme süreniz doldu. Yeni adisyon açılamaz; açık '
-                'adisyonları kapatabilirsiniz. Verileriniz silinmez.';
-    } else if (subscription.status == 'GRACE_PERIOD') {
-      detail =
-          'Google Play ödemenizi alamadı. Erişiminiz şimdilik devam ediyor; '
-          'Google Play\'deki ödeme yönteminizi güncelleyin.';
-    } else if (subscription.playExpiryTime != null) {
-      final date = _formatDate(subscription.playExpiryTime!.toLocal());
-      detail = subscription.playAutoRenewing == true
-          ? 'Aboneliğiniz $date tarihinde yenilenecek.'
-          : 'Otomatik yenileme kapalı. Aboneliğiniz $date tarihine kadar '
-                'geçerli.';
-    }
+    final detail = switch (entitlement.accessSource) {
+      AccessSource.appTrial =>
+        'Ücretsiz denemenizin ${entitlement.appTrialDaysLeft} günü kaldı. '
+            'Deneme süresince ${entitlement.effectivePlanName} planının tüm '
+            'özellikleri açık.',
+      AccessSource.playTrial =>
+        'Google Play ücretsiz döneminiz sürüyor'
+            '${entitlement.playExpiryTime == null ? '' : ' (${_formatDate(entitlement.playExpiryTime!.toLocal())} tarihine kadar)'}. '
+            'Bu süre boyunca ${entitlement.effectivePlanName} planının tüm '
+            'özellikleri açık.',
+      AccessSource.playSubscription =>
+        entitlement.playExpiryTime == null
+            ? null
+            : entitlement.playAutoRenewing == true
+            ? 'Aboneliğiniz ${_formatDate(entitlement.playExpiryTime!.toLocal())} tarihinde yenilenecek.'
+            : 'Otomatik yenileme kapalı. Aboneliğiniz '
+                  '${_formatDate(entitlement.playExpiryTime!.toLocal())} tarihine kadar geçerli.',
+      AccessSource.suspended =>
+        'Hesabınız askıya alındı. Lütfen destek ile iletişime geçin.',
+      AccessSource.none =>
+        'Aktif bir deneme veya aboneliğiniz yok. Yeni adisyon açılamaz; açık '
+            'adisyonları kapatabilirsiniz ve verileriniz silinmez. Devam etmek '
+            'için aşağıdan bir plan seçin.',
+      AccessSource.manual => null,
+    };
 
     final usage = [
-      ('Masa', subscription.tableCount, subscription.maxTables),
-      ('Garson', subscription.waiterCount, subscription.maxWaiters),
-      ('Alan', subscription.areaCount, subscription.maxAreas),
+      ('Masa', entitlement.tableCount, entitlement.maxTables),
+      ('Garson', entitlement.waiterCount, entitlement.maxWaiters),
+      ('Alan', entitlement.areaCount, entitlement.maxAreas),
     ];
 
     return Card(
@@ -128,19 +163,41 @@ class _StatusSection extends StatelessWidget {
             Text('Durum', style: muted),
             const SizedBox(height: 4),
             Text(
-              subscription.statusLabel,
+              entitlement.statusLabel,
               style: textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
             ),
             const SizedBox(height: 4),
             Text(
-              'Plan: ${subscription.planName ?? 'Plan atanmadı'}',
+              'Abone olunan plan: ${entitlement.subscribedPlanName ?? '—'}',
               style: muted,
             ),
+            Text(
+              'Şu an geçerli haklar: ${entitlement.effectivePlanName ?? '—'}',
+              style: muted,
+            ),
+            if (entitlement.status == 'GRACE_PERIOD') ...[
+              const SizedBox(height: 12),
+              const _Notice(
+                text:
+                    'Google Play ödemenizi alamadı. Erişiminiz şimdilik devam '
+                    'ediyor; Google Play\'deki ödeme yönteminizi güncelleyin.',
+                tone: _NoticeTone.warning,
+              ),
+            ],
             if (detail != null) ...[
               const SizedBox(height: 12),
               Text(detail, style: muted),
+            ],
+            if (entitlement.playProductId != null) ...[
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: () =>
+                    _openManageSubscription(entitlement.playProductId!),
+                icon: const Icon(Icons.open_in_new),
+                label: const Text('Aboneliği Yönet'),
+              ),
             ],
             const Divider(height: 32),
             for (final (label, used, limit) in usage) ...[
@@ -181,6 +238,14 @@ class _StatusSection extends StatelessWidget {
   }
 }
 
+Future<void> _openManageSubscription(String productId) async {
+  final uri = Uri.https('play.google.com', '/store/account/subscriptions', {
+    'sku': productId,
+    'package': AppConfig.androidPackageName,
+  });
+  await launchUrl(uri, mode: LaunchMode.externalApplication);
+}
+
 class _PeriodToggle extends ConsumerWidget {
   const _PeriodToggle({required this.plans});
 
@@ -216,10 +281,17 @@ class _PeriodToggle extends ConsumerWidget {
 }
 
 class _PlanCards extends ConsumerWidget {
-  const _PlanCards({required this.plans, required this.currentPlanId});
+  const _PlanCards({
+    required this.plans,
+    required this.entitlement,
+    required this.offers,
+    required this.offersLoading,
+  });
 
   final List<CatalogPlan> plans;
-  final String? currentPlanId;
+  final Entitlement? entitlement;
+  final Map<String, List<PlayPlanOffer>>? offers;
+  final bool offersLoading;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -237,7 +309,10 @@ class _PlanCards extends ConsumerWidget {
         _PlanCard(
           plan: plan,
           period: period,
-          isCurrent: plan.id == currentPlanId,
+          entitlement: entitlement,
+          catalog: plans,
+          offers: offers,
+          offersLoading: offersLoading,
         ),
     ];
 
@@ -269,28 +344,76 @@ class _PlanCards extends ConsumerWidget {
   }
 }
 
-class _PlanCard extends StatelessWidget {
+class _PlanCard extends ConsumerWidget {
   const _PlanCard({
     required this.plan,
     required this.period,
-    required this.isCurrent,
+    required this.entitlement,
+    required this.catalog,
+    required this.offers,
+    required this.offersLoading,
   });
 
   final CatalogPlan plan;
   final BillingPeriod period;
-  final bool isCurrent;
+  final Entitlement? entitlement;
+  final List<CatalogPlan> catalog;
+  final Map<String, List<PlayPlanOffer>>? offers;
+  final bool offersLoading;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final muted = theme.textTheme.bodySmall?.copyWith(
       color: Colors.grey.shade600,
     );
     final isYearly = period == BillingPeriod.yearly;
+    final purchase = ref.watch(purchaseControllerProvider);
+
+    final basePlanId = plan.basePlanIdFor(period);
+    final isPlanChange = entitlement?.hasPlaySubscription ?? false;
+    final planOffers = [
+      for (final offer
+          in offers?[plan.googlePlayProductId] ?? const <PlayPlanOffer>[])
+        if (offer.basePlanId == basePlanId) offer,
+    ];
+    final offer = selectOffer(planOffers, allowCampaign: !isPlanChange);
+
+    final isSubscribedPlan = entitlement?.subscribedPlanId == plan.id;
+    final isCurrentPurchase =
+        isPlanChange &&
+        isSubscribedPlan &&
+        entitlement?.playBasePlanId == basePlanId;
+
+    final String buttonLabel;
+    VoidCallback? onPressed;
+    if (isCurrentPurchase) {
+      buttonLabel = 'Mevcut aboneliğiniz';
+    } else if (offersLoading) {
+      buttonLabel = 'Yükleniyor...';
+    } else if (offer == null) {
+      buttonLabel = 'Şu an kullanılamıyor';
+    } else {
+      buttonLabel = isPlanChange
+          ? 'Bu plana geç'
+          : offer.hasFreeTrial
+          ? 'Ücretsiz dönemi başlat'
+          : 'Aboneliği başlat';
+      if (!purchase.isBusy) {
+        onPressed = () => ref
+            .read(purchaseControllerProvider.notifier)
+            .buy(
+              plan: plan,
+              offer: offer,
+              entitlement: entitlement,
+              catalog: catalog,
+            );
+      }
+    }
 
     return Card(
       margin: EdgeInsets.zero,
-      shape: isCurrent
+      shape: isSubscribedPlan
           ? RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
               side: BorderSide(color: theme.colorScheme.primary, width: 1.5),
@@ -311,7 +434,7 @@ class _PlanCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (isCurrent)
+                if (isSubscribedPlan)
                   const Chip(
                     label: Text('Mevcut plan'),
                     visualDensity: VisualDensity.compact,
@@ -319,39 +442,37 @@ class _PlanCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: formatTl(plan.priceFor(period)),
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  TextSpan(text: isYearly ? ' / yıl' : ' / ay', style: muted),
-                ],
-              ),
-            ),
-            if (isYearly && plan.yearlyDiscount > 0) ...[
-              const SizedBox(height: 2),
+            if (offer != null)
+              // Google Play's localized price and campaign, verbatim.
+              Text(
+                describeOffer(offer),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              )
+            else ...[
               Text.rich(
                 TextSpan(
-                  style: muted,
                   children: [
                     TextSpan(
-                      text: formatTl(plan.monthlyPrice * 12),
-                      style: const TextStyle(
-                        decoration: TextDecoration.lineThrough,
+                      text: formatTl(plan.priceFor(period)),
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
-                    TextSpan(
-                      text: '  %${plan.yearlyDiscount.round()} indirim',
-                      style: TextStyle(
-                        color: Colors.green.shade700,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    TextSpan(text: isYearly ? ' / yıl' : ' / ay', style: muted),
                   ],
+                ),
+              ),
+              Text('Liste fiyatı', style: muted),
+            ],
+            if (isYearly && plan.yearlyDiscount > 0) ...[
+              const SizedBox(height: 2),
+              Text(
+                '%${plan.yearlyDiscount.round()} yıllık indirim',
+                style: TextStyle(
+                  color: Colors.green.shade700,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
@@ -372,9 +493,7 @@ class _PlanCard extends StatelessWidget {
                 ),
               ),
             const SizedBox(height: 12),
-            // Deliberately disabled until Play Billing + server-side
-            // verification exist -- no simulated purchase.
-            const OutlinedButton(onPressed: null, child: Text('Yakında')),
+            ElevatedButton(onPressed: onPressed, child: Text(buttonLabel)),
           ],
         ),
       ),

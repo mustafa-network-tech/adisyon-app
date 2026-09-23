@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getSessionContext, getBusinessAdminContext } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { SignOutButton } from "@/components/sign-out-button";
+import type { BusinessEntitlement } from "@/lib/supabase/database.types";
 
 const navLinks = [
   { href: "/isletme", label: "Genel Bakış" },
@@ -47,11 +48,12 @@ export default async function IsletmeLayout({ children }: { children: React.Reac
   }
 
   const supabase = await createClient();
-  const { data: business } = await supabase
-    .from("businesses")
-    .select("subscription_status, trial_ends_at")
-    .eq("id", businessCtx.businessId)
-    .single();
+  // Status and remaining trial days are computed by the database (server
+  // clock), never from the browser's clock.
+  const { data: entitlementRows } = await supabase.rpc("get_business_entitlement", {
+    p_business_id: businessCtx.businessId,
+  });
+  const entitlement = entitlementRows?.[0] ?? null;
 
   return (
     <div className="flex min-h-screen flex-1">
@@ -84,7 +86,7 @@ export default async function IsletmeLayout({ children }: { children: React.Reac
           <SignOutButton className="text-sm font-medium text-zinc-700" />
         </header>
         <main className="flex-1 px-6 py-8 sm:px-10">
-          {business && <SubscriptionBanner business={business} />}
+          {entitlement && <SubscriptionBanner entitlement={entitlement} />}
           {children}
         </main>
       </div>
@@ -92,22 +94,17 @@ export default async function IsletmeLayout({ children }: { children: React.Reac
   );
 }
 
-// Pulled out of the component body (rather than calling Date.now()
-// inline in the render) so it reads as an ordinary pure-in/pure-out
-// helper, not a component computing an impure value during render.
-function daysUntil(dateIso: string): number {
-  return Math.ceil((new Date(dateIso).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+function SubscriptionLink() {
+  return (
+    <Link href="/isletme/abonelik" className="font-medium underline underline-offset-4">
+      Abonelik
+    </Link>
+  );
 }
 
-// "Kullanıcıya anlaşılır abonelik ekranı göster" (section 8). A trial
-// countdown once it's getting close, and a clear explanation whenever
-// the business can't open new orders -- never a raw status enum.
-function SubscriptionBanner({
-  business,
-}: {
-  business: { subscription_status: string; trial_ends_at: string };
-}) {
-  if (business.subscription_status === "SUSPENDED") {
+// A clear explanation of the business's access state -- never a raw enum.
+function SubscriptionBanner({ entitlement }: { entitlement: BusinessEntitlement }) {
+  if (entitlement.access_source === "SUSPENDED") {
     return (
       <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
         Hesabınız askıya alındı. Yeni sipariş oluşturma gibi işlemler kısıtlanmıştır. Lütfen
@@ -115,18 +112,15 @@ function SubscriptionBanner({
       </div>
     );
   }
-  if (business.subscription_status === "EXPIRED" || business.subscription_status === "CANCELLED") {
+  if (entitlement.access_source === "APP_TRIAL") {
     return (
-      <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-        Aboneliğinizin süresi doldu. Yeni sipariş oluşturma gibi işlemler kısıtlanmıştır. Planları{" "}
-        <Link href="/isletme/abonelik" className="font-medium underline underline-offset-4">
-          Abonelik
-        </Link>{" "}
-        sayfasında inceleyebilir veya destek ile iletişime geçebilirsiniz.
+      <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        Ücretsiz denemenizin {entitlement.app_trial_days_left} günü kaldı. Deneme süresince{" "}
+        {entitlement.effective_plan_name} planının tüm özellikleri açık.
       </div>
     );
   }
-  if (business.subscription_status === "GRACE_PERIOD") {
+  if (entitlement.subscription_status === "GRACE_PERIOD") {
     return (
       <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
         Google Play ödemeniz alınamadı. Erişiminiz şimdilik devam ediyor; lütfen Google Play
@@ -134,23 +128,23 @@ function SubscriptionBanner({
       </div>
     );
   }
-  if (business.subscription_status === "TRIAL") {
-    const daysLeft = daysUntil(business.trial_ends_at);
-    if (daysLeft <= 0) {
-      return (
-        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          Ücretsiz deneme süreniz doldu. Yeni sipariş oluşturma gibi işlemler kısıtlanmıştır;
-          açık adisyonlarınızı kapatabilirsiniz. Planları{" "}
-          <Link href="/isletme/abonelik" className="font-medium underline underline-offset-4">
-            Abonelik
-          </Link>{" "}
-          sayfasında inceleyebilirsiniz.
-        </div>
-      );
-    }
+  if (entitlement.access_source === "PLAY_TRIAL") {
     return (
-      <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-        Ücretsiz deneme sürenizin bitmesine {daysLeft} gün kaldı.
+      <div className="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+        Google Play ücretsiz döneminiz sürüyor. Bu süre boyunca {entitlement.effective_plan_name}{" "}
+        planının tüm özellikleri açık.
+      </div>
+    );
+  }
+  if (!entitlement.is_operational) {
+    const reason =
+      entitlement.subscription_status === "TRIAL"
+        ? "Ücretsiz deneme süreniz doldu."
+        : "Aktif bir aboneliğiniz bulunmuyor.";
+    return (
+      <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        {reason} Yeni adisyon açılamaz; açık adisyonlarınızı kapatabilirsiniz ve verileriniz
+        silinmez. Devam etmek için <SubscriptionLink /> sayfasındaki adımları izleyin.
       </div>
     );
   }

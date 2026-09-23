@@ -22,8 +22,24 @@ export interface CatalogPlan {
   qrMenuEnabled: boolean;
 }
 
-// Mirrors the 7-day interval in public.create_own_business -- display only.
-export const TRIAL_DAYS = 7;
+export interface TrialSettings {
+  appTrialDays: number;
+  trialPlanName: string | null;
+}
+
+// The MK Adisyon app trial length and the plan whose rights apply during
+// any free period both live in subscription_settings (Super Admin →
+// Ayarlar); create_own_business reads the same row. Display only here.
+export async function getTrialSettings(supabase: ServerSupabase): Promise<TrialSettings> {
+  const { data } = await supabase
+    .from("subscription_settings")
+    .select("app_trial_days, trial_plan_code")
+    .maybeSingle();
+  const { data: plan } = data
+    ? await supabase.from("plans").select("name").eq("code", data.trial_plan_code).maybeSingle()
+    : { data: null };
+  return { appTrialDays: data?.app_trial_days ?? 0, trialPlanName: plan?.name ?? null };
+}
 
 export async function getCatalogPlans(supabase: ServerSupabase): Promise<CatalogPlan[]> {
   const { data } = await supabase
