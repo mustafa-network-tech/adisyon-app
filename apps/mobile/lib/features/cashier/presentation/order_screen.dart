@@ -333,6 +333,12 @@ class _OrderScreenState extends ConsumerState<OrderScreen> {
                             const SizedBox(width: 12),
                             OutlinedButton(
                               onPressed: _busy ? null : _cancelOrder,
+                              // The theme's full-width minimumSize can't be
+                              // laid out inside a Row (unbounded width) and
+                              // blanked the whole screen.
+                              style: OutlinedButton.styleFrom(
+                                minimumSize: const Size(0, 52),
+                              ),
                               child: const Text('İptal Et'),
                             ),
                           ],

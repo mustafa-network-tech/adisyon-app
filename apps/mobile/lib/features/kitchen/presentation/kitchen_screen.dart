@@ -96,20 +96,34 @@ class _KitchenScreenState extends ConsumerState<KitchenScreen> {
             );
           }
 
-          return GridView.builder(
-            padding: const EdgeInsets.all(16),
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 340,
-              mainAxisSpacing: 16,
-              crossAxisSpacing: 16,
-              mainAxisExtent: 320,
-            ),
-            itemCount: tickets.length,
-            itemBuilder: (context, index) {
-              final ticket = tickets[index];
-              return TicketCard(
-                ticket: ticket,
-                onAdvance: (item, nextStatus) => _advance(item.id, nextStatus),
+          // Cards size to their content (a ticket can have many items);
+          // one column on phones, more on tablets/kitchen displays.
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              const spacing = 16.0;
+              const maxCardWidth = 360.0;
+              final available = constraints.maxWidth - 2 * spacing;
+              final columns = ((available + spacing) / (maxCardWidth + spacing))
+                  .floor()
+                  .clamp(1, 6);
+              final cardWidth = (available - spacing * (columns - 1)) / columns;
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(spacing),
+                child: Wrap(
+                  spacing: spacing,
+                  runSpacing: spacing,
+                  children: [
+                    for (final ticket in tickets)
+                      SizedBox(
+                        width: cardWidth,
+                        child: TicketCard(
+                          ticket: ticket,
+                          onAdvance: (item, nextStatus) =>
+                              _advance(item.id, nextStatus),
+                        ),
+                      ),
+                  ],
+                ),
               );
             },
           );

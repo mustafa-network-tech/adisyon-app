@@ -90,12 +90,14 @@ class WaiterHomeScreen extends ConsumerWidget {
 
                     return GridView.builder(
                       padding: const EdgeInsets.all(16),
+                      // Two columns on a phone, more on tablets (same
+                      // approach as the cashier board).
                       gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
+                          const SliverGridDelegateWithMaxCrossAxisExtent(
+                            maxCrossAxisExtent: 220,
                             crossAxisSpacing: 12,
                             mainAxisSpacing: 12,
-                            childAspectRatio: 1.5,
+                            mainAxisExtent: 120,
                           ),
                       itemCount: areaTables.length,
                       itemBuilder: (context, index) {
