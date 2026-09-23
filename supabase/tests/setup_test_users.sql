@@ -4,6 +4,15 @@
 
 begin;
 
+-- Oturumda önceden kalmış bir kullanıcı kimliği (SQL Editor rol taklidi
+-- veya oturum düzeyinde request.jwt.claim.sub / request.jwt.claims)
+-- audit trigger'ını "Not authorized to log an audit event" hatasıyla
+-- durdurur. Kurulum kullanıcı oturumu olmadan çalışmalı.
+reset role;
+select set_config('request.jwt.claim.sub', '', true),
+       set_config('request.jwt.claim.role', '', true),
+       set_config('request.jwt.claims', '', true);
+
 -- Auth kullanicilarinin gercekten var oldugunu dogrula.
 do $$
 declare

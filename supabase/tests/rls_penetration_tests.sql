@@ -27,6 +27,34 @@
 
 begin;
 
+-- ---- Oturum kimliğini sıfırla ----
+-- SQL Editor oturumu önceden bir kullanıcı kimliği taşıyabilir (rol
+-- taklidi veya daha önce oturum düzeyinde set edilmiş
+-- request.jwt.claim.sub / request.jwt.claims). auth.uid() bunları okur ve
+-- claim.sub'a öncelik verir; temizlenmezse aşağıdaki kurulum verisi bu
+-- kullanıcı adına yazılır ve audit trigger'ı "Not authorized to log an
+-- audit event" hatasıyla durur. Kurulum, kullanıcı oturumu olmadan
+-- (service role gibi) çalışmalı.
+reset role;
+select set_config('request.jwt.claim.sub', '', true),
+       set_config('request.jwt.claim.role', '', true),
+       set_config('request.jwt.claims', '', true);
+
+-- ---- Kalıcı test rollerini nötrle ----
+-- setup_test_users.sql admin_a'yı platform süper yöneticisi yapar; bu
+-- senaryolar ise onu sıradan bir işletme yöneticisi olarak kullanır
+-- (platform yöneticisi her işletmeyi görebilir ve plan değiştirebilir --
+-- bu beklenen davranıştır, açık değil). Satır yalnızca bu transaction
+-- içinde silinir; sondaki ROLLBACK geri getirir.
+delete from public.platform_admins
+where user_id in (
+  'eecceeb6-504e-4a75-813b-99f19b61841b',
+  '7d4ec330-d7e7-4d18-b394-9b1b26f68b9f',
+  'a0ceeb8a-0abf-4548-bc80-f9b8ac7970fb',
+  'c0d2e232-69a0-48f3-be90-aac2f3957034',
+  'a96dbfd3-8265-4840-a47a-9dbde237269e'
+);
+
 -- ---- 1. Test kullanıcıları ----
 -- Gerçek auth.users UID eşlemesi:
 -- admin_a   = eecceeb6-504e-4a75-813b-99f19b61841b
@@ -106,6 +134,8 @@ begin
     else null
   end;
   if v_id is null then raise exception 'Bilinmeyen test kullanıcısı: %', p_name; end if;
+  -- auth.uid() request.jwt.claim.sub'a öncelik verir; ikisi de set edilir.
+  perform set_config('request.jwt.claim.sub', v_id::text, true);
   perform set_config('request.jwt.claims', json_build_object('sub', v_id, 'role', 'authenticated')::text, true);
 end;
 $$;

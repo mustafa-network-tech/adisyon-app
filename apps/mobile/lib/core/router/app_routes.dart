@@ -11,6 +11,7 @@ class AppRoutes {
   static const cashierHome = '/kasa';
   static const cashierOrderPattern = '/kasa/hesap/:orderId';
   static const businessAdminHome = '/isletme-yoneticisi';
+  static const businessAdminSubscription = '/isletme-yoneticisi/abonelik';
 
   static String waiterTable(String tableId) => '/garson/masa/$tableId';
   static String waiterMenu(String tableId) => '/garson/masa/$tableId/menu';

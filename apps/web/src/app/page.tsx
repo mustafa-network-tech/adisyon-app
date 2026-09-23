@@ -23,6 +23,13 @@ export default function Home() {
             Giriş Yap
           </Link>
         </div>
+
+        <Link
+          href="/fiyatlandirma"
+          className="mt-6 inline-block text-sm font-medium text-zinc-600 underline-offset-4 hover:text-zinc-900 hover:underline"
+        >
+          Planları ve fiyatları inceleyin
+        </Link>
       </div>
     </div>
   );

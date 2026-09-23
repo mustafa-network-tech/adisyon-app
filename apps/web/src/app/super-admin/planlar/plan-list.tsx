@@ -6,6 +6,7 @@ import { togglePlanActive } from "./actions";
 
 export interface PlanRow {
   id: string;
+  code: string | null;
   name: string;
   monthly_price: number;
   max_tables: number | null;
@@ -54,6 +55,7 @@ export function PlanList({ plans }: { plans: PlanRow[] }) {
                 >
                   {plan.name}
                 </Link>
+                {plan.code && <p className="text-xs text-zinc-400">{plan.code}</p>}
               </td>
               <td className="px-5 py-3 text-zinc-600">{currencyFormatter.format(plan.monthly_price)}</td>
               <td className="px-5 py-3 text-zinc-600">

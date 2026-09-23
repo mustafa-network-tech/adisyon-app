@@ -57,16 +57,16 @@ export function CreatePlanForm() {
         <input id="monthly_price" name="monthly_price" type="number" step="0.01" min={0} className={inputClass} />
       </div>
       <div>
-        <label className={labelClass} htmlFor="yearly_price">
-          Yıllık Fiyat (₺)
-        </label>
-        <input id="yearly_price" name="yearly_price" type="number" step="0.01" min={0} className={inputClass} />
+        <p className={labelClass}>Yıllık Fiyat</p>
+        <p className="rounded-lg border border-dashed border-zinc-300 px-3.5 py-2.5 text-sm text-zinc-500">
+          Otomatik: aylık fiyat × 12 − yıllık indirim
+        </p>
       </div>
       <div>
         <label className={labelClass} htmlFor="yearly_discount">
           Yıllık İndirim (%)
         </label>
-        <input id="yearly_discount" name="yearly_discount" type="number" step="0.01" min={0} className={inputClass} />
+        <input id="yearly_discount" name="yearly_discount" type="number" step="0.01" min={0} max={99.99} defaultValue={10} className={inputClass} />
       </div>
       <div>
         <label className={labelClass} htmlFor="reporting_level">

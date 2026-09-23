@@ -39,7 +39,6 @@ export async function createPlan(
   const { error } = await supabase.from("plans").insert({
     name,
     monthly_price: parseDecimal(formData.get("monthly_price")),
-    yearly_price: parseDecimal(formData.get("yearly_price")),
     yearly_discount: parseDecimal(formData.get("yearly_discount")),
     max_tables: parseNullableInt(formData.get("max_tables")),
     max_waiters: parseNullableInt(formData.get("max_waiters")),

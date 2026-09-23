@@ -10,6 +10,7 @@ export type SubscriptionStatus =
   | "EXPIRED"
   | "SUSPENDED"
   | "CANCELLED";
+export type BillingPeriod = "MONTHLY" | "YEARLY";
 export type GooglePlayPurchaseState =
   | "PENDING"
   | "ACTIVE"
@@ -54,6 +55,8 @@ export interface Database {
       plans: {
         Row: {
           id: string;
+          code: string | null;
+          sort_order: number;
           name: string;
           monthly_price: number;
           yearly_price: number;
@@ -502,7 +505,22 @@ export interface Database {
         ];
       };
     };
-    Views: Record<string, never>;
+    Views: {
+      plan_billing_options: {
+        Row: {
+          plan_id: string;
+          plan_code: string;
+          plan_name: string;
+          sort_order: number;
+          billing_period: BillingPeriod;
+          price: number;
+          currency: "TRY";
+          google_play_product_id: string | null;
+          google_play_base_plan_id: string | null;
+        };
+        Relationships: [];
+      };
+    };
     Functions: {
       is_platform_admin: { Args: Record<string, never>; Returns: boolean };
       has_business_role: { Args: { p_business_id: string; p_roles: string[] }; Returns: boolean };

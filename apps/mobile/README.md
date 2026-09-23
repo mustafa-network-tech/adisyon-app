@@ -50,11 +50,46 @@ cp dart_define.example.json dart_define.json
 flutter run --dart-define-from-file=dart_define.json
 ```
 
-Release build de aynı şekilde:
+## Play Store yayını
+
+### İmzalama anahtarı (bir kez)
+
+Play Store'a yüklenen her sürüm aynı upload anahtarıyla imzalanmalı.
+Anahtarı kaybederseniz uygulamayı güncelleyemezsiniz — `.jks` dosyasını
+ve şifreleri repo dışında güvenli bir yere (şifre yöneticisi + yedek)
+kaydedin.
 
 ```bash
-flutter build appbundle --dart-define-from-file=dart_define.json
+keytool -genkey -v -keystore %USERPROFILE%\mk-adisyon-upload.jks ^
+  -keyalg RSA -keysize 2048 -validity 10000 -alias upload
 ```
+
+Ardından `android/key.properties` oluşturun (`.gitignore`'da):
+
+```properties
+storePassword=<keystore şifresi>
+keyPassword=<anahtar şifresi>
+keyAlias=upload
+storeFile=C:/Users/<kullanici>/mk-adisyon-upload.jks
+```
+
+`key.properties` yoksa Gradle debug anahtarıyla imzalar (yalnızca yerel
+test için) — Play Console bu paketi reddeder.
+
+### AAB oluşturma
+
+Her yeni sürümde `pubspec.yaml`'daki `version`'ı artırın (`1.0.1+2`
+gibi; `+` sonrasındaki build numarası her yüklemede büyümeli). Sonra:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/build_release.ps1
+```
+
+Script `dart_define.json` ve `key.properties`'i kontrol eder, analiz +
+testleri çalıştırır, obfuscate edilmiş AAB'yi
+`build/app/outputs/bundle/release/app-release.aab` altına üretir.
+`build/symbols` klasörünü her sürüm için saklayın (Play Console crash
+raporlarını çözümlemek için gerekir).
 
 ## Mimari
 

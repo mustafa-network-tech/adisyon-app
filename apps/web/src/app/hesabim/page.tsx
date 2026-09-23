@@ -4,15 +4,14 @@ import {
   getSessionContext,
   getBusinessAdminContext,
   getCashierContext,
+  getKitchenContext,
 } from "@/lib/auth/session";
 import { SignOutButton } from "@/components/sign-out-button";
 
 // Generic post-login landing page: routes a platform admin, business
-// admin, or cashier straight to their panel; everyone else (WAITER,
-// KITCHEN) lands here with a clear status message. Faz 13: KITCHEN no
-// longer redirects to /mutfak -- kitchen operations moved to the
-// Android app only in production, so KITCHEN now falls into the same
-// "use the mobile app" message WAITER already got.
+// admin, cashier, or kitchen user straight to their panel; everyone
+// else (WAITER) lands here with a clear status message, since WAITER's
+// surface is the Android app.
 export default async function HesabimPage() {
   const ctx = await getSessionContext();
   if (!ctx) redirect("/giris");
@@ -23,6 +22,9 @@ export default async function HesabimPage() {
 
   const cashierCtx = await getCashierContext();
   if (cashierCtx) redirect("/kasa");
+
+  const kitchenCtx = await getKitchenContext();
+  if (kitchenCtx) redirect("/mutfak");
 
   const supabase = await createClient();
   const { data: memberships } = await supabase
@@ -38,7 +40,7 @@ export default async function HesabimPage() {
         </h1>
         <p className="mt-2 text-sm leading-6 text-zinc-600">
           {memberships && memberships.length > 0
-            ? "Bu rol için web paneli yakında aktif olacak. Şimdilik MK Adisyon mobil uygulamasını kullanabilirsiniz."
+            ? "Garson işlemleri MK Adisyon mobil uygulaması üzerinden yapılır. Lütfen mobil uygulamayı kullanın."
             : "Hesabınız henüz bir işletmeye tanımlanmamış. Lütfen işletme yöneticinizle iletişime geçin."}
         </p>
         <div className="mt-6">

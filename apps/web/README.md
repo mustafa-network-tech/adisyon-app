@@ -3,7 +3,7 @@ MK Adisyon web app: Platform Super Admin (plan management at
 `/super-admin/destek`), business application/onboarding, Business Admin
 panel (`/isletme` — subscription-status banner, QR menu at
 `/isletme/qr-menu`, support/custom-software forms at `/isletme/destek`),
-a realtime Kitchen Display (`/mutfak`), a POS/Kasa (`/kasa` — open
+a realtime Kitchen Display (`/mutfak` — KITCHEN + BUSINESS_ADMIN), a POS/Kasa (`/kasa` — open
 tables, split payments, close/cancel a bill), revenue reports
 (`/raporlar`), and a public QR menu page (`/menu/[businessId]`, no auth
 — gated per-business by the `qr_menu_enabled` plan flag) so far — see

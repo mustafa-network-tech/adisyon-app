@@ -7,6 +7,7 @@ import { SignOutButton } from "@/components/sign-out-button";
 const navLinks = [
   { href: "/isletme", label: "Genel Bakış" },
   { href: "/kasa", label: "Kasa" },
+  { href: "/mutfak", label: "Mutfak" },
   { href: "/isletme/alanlar", label: "Alanlar" },
   { href: "/isletme/masalar", label: "Masalar" },
   { href: "/isletme/kategoriler", label: "Kategoriler" },
@@ -14,6 +15,7 @@ const navLinks = [
   { href: "/isletme/personel", label: "Personel" },
   { href: "/isletme/qr-menu", label: "QR Menü" },
   { href: "/raporlar", label: "Raporlar" },
+  { href: "/isletme/abonelik", label: "Abonelik" },
   { href: "/isletme/destek", label: "Destek" },
   { href: "/isletme/audit", label: "Denetim Kaydı" },
   { href: "/isletme/ayarlar", label: "Ayarlar" },
@@ -116,8 +118,19 @@ function SubscriptionBanner({
   if (business.subscription_status === "EXPIRED" || business.subscription_status === "CANCELLED") {
     return (
       <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-        Aboneliğinizin süresi doldu. Yeni sipariş oluşturma gibi işlemler kısıtlanmıştır. Devam
-        etmek için lütfen bir plan seçin veya destek ile iletişime geçin.
+        Aboneliğinizin süresi doldu. Yeni sipariş oluşturma gibi işlemler kısıtlanmıştır. Planları{" "}
+        <Link href="/isletme/abonelik" className="font-medium underline underline-offset-4">
+          Abonelik
+        </Link>{" "}
+        sayfasında inceleyebilir veya destek ile iletişime geçebilirsiniz.
+      </div>
+    );
+  }
+  if (business.subscription_status === "GRACE_PERIOD") {
+    return (
+      <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        Google Play ödemeniz alınamadı. Erişiminiz şimdilik devam ediyor; lütfen Google Play
+        hesabınızdaki ödeme yöntemini güncelleyin.
       </div>
     );
   }
@@ -126,8 +139,12 @@ function SubscriptionBanner({
     if (daysLeft <= 0) {
       return (
         <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          Ücretsiz deneme süreniz doldu. Yeni sipariş oluşturma gibi işlemler kısıtlanmıştır.
-          Devam etmek için lütfen destek ile iletişime geçin.
+          Ücretsiz deneme süreniz doldu. Yeni sipariş oluşturma gibi işlemler kısıtlanmıştır;
+          açık adisyonlarınızı kapatabilirsiniz. Planları{" "}
+          <Link href="/isletme/abonelik" className="font-medium underline underline-offset-4">
+            Abonelik
+          </Link>{" "}
+          sayfasında inceleyebilirsiniz.
         </div>
       );
     }

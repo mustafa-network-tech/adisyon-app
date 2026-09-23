@@ -8,6 +8,7 @@ import '../../features/cashier/presentation/order_screen.dart';
 import '../../features/home/presentation/role_placeholder_screens.dart';
 import '../../features/kitchen/presentation/kitchen_screen.dart';
 import '../../features/splash/presentation/splash_screen.dart';
+import '../../features/subscription/presentation/subscription_screen.dart';
 import '../../features/waiter/presentation/menu_screen.dart';
 import '../../features/waiter/presentation/table_screen.dart';
 import '../../features/waiter/presentation/waiter_home_screen.dart';
@@ -77,6 +78,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.businessAdminHome,
         builder: (context, state) => const BusinessAdminHomeScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.businessAdminSubscription,
+        builder: (context, state) => const SubscriptionScreen(),
       ),
     ],
   );

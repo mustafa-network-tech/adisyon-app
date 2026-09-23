@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { LEGAL_LINKS } from "@/lib/legal-links";
 
 const inputClass =
   "w-full rounded-lg border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500";
@@ -36,10 +37,16 @@ export function SignupForm() {
   const [city, setCity] = useState("");
   const [address, setAddress] = useState("");
   const [businessPhone, setBusinessPhone] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setError(null);
+
+    if (!termsAccepted) {
+      setError("Devam etmek için Kullanım Koşulları'nı kabul etmelisiniz.");
+      return;
+    }
 
     if (password.length < 8) {
       setError("Şifre en az 8 karakter olmalıdır.");
@@ -229,6 +236,55 @@ export function SignupForm() {
             className={inputClass}
           />
         </div>
+      </div>
+
+      {/* Terms acceptance is the only checkbox. The KVKK notice is
+          informational (KVKK md. 10), not consent, so it is shown as a
+          link and must not be bundled into this acceptance. */}
+      <div className="space-y-3 border-t border-zinc-100 pt-5">
+        <label className="flex items-start gap-2.5 text-sm text-zinc-700" htmlFor="terms_accepted">
+          <input
+            id="terms_accepted"
+            type="checkbox"
+            required
+            checked={termsAccepted}
+            onChange={(e) => setTermsAccepted(e.target.checked)}
+            className="mt-0.5 h-4 w-4 shrink-0 rounded border-zinc-300 accent-zinc-900"
+          />
+          <span>
+            Üyelik oluşturarak{" "}
+            <a
+              href={LEGAL_LINKS.terms}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-zinc-900 underline underline-offset-2"
+            >
+              Kullanım Koşulları
+            </a>
+            &apos;nı kabul ediyorum.
+          </span>
+        </label>
+        <p className="text-xs leading-relaxed text-zinc-500">
+          Kişisel verilerinizin işlenmesine ilişkin bilgilendirme için{" "}
+          <a
+            href={LEGAL_LINKS.kvkk}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2 hover:text-zinc-700"
+          >
+            KVKK Aydınlatma Metni
+          </a>{" "}
+          ve{" "}
+          <a
+            href={LEGAL_LINKS.privacy}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2 hover:text-zinc-700"
+          >
+            Gizlilik Politikası
+          </a>
+          &apos;nı inceleyebilirsiniz.
+        </p>
       </div>
 
       <button

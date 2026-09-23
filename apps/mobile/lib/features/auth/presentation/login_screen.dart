@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/widgets/legal_links_bar.dart';
 import '../application/auth_providers.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -156,6 +157,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           )
                         : const Text('Giriş Yap'),
                   ),
+                  const SizedBox(height: 16),
+                  const LegalLinksBar(),
                 ],
               ),
             ),

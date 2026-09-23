@@ -9,7 +9,7 @@ export function friendlyWriteErrorMessage(
   const message = error?.message ?? "";
 
   if (message.includes("PLAN_LIMIT_EXCEEDED")) {
-    return "Planınızın izin verdiği sınıra ulaştınız. Daha fazlası için işletme yöneticinizle veya destek ile iletişime geçin.";
+    return "Planınızın izin verdiği sınıra ulaştınız. Daha yüksek limitli planları Abonelik sayfasında görebilirsiniz.";
   }
   if (message.includes("TRIAL_OR_SUBSCRIPTION_INACTIVE")) {
     return "Deneme süreniz sona erdi veya aboneliğiniz aktif değil. Lütfen destek ile iletişime geçin.";

@@ -398,3 +398,14 @@ supabase db push
 
 veya Supabase Dashboard → SQL Editor üzerinden `supabase/migrations/`
 altındaki dosyaları sırayla çalıştırabilirsiniz.
+
+**Faz 14 notları (web modülleri + yayın hazırlığı):** Faz 13'te
+kapatılan Kitchen Web (`/mutfak`) yeniden açıldı: KITCHEN rolü girişte
+`/mutfak`'a yönleniyor, BUSINESS_ADMIN de ekrana erişebiliyor (işletme
+menüsünde "Mutfak" linki). Yeni bir yetki açılmadı — `order_items`
+UPDATE policy'si Faz 1'den beri her iki rolü de kapsıyordu. Mutfak
+panosuna Kasa'daki gibi görünürlük/focus + 30 sn polling ile resync
+eklendi (realtime kopmalarında kaçan event'ler için). WAITER yalnızca
+Android'de kalıyor. Web'e temel güvenlik başlıkları eklendi
+(`next.config.ts`); nonce tabanlı CSP ayrıca ele alınacak. Yayın adımları:
+[`docs/RELEASE.md`](RELEASE.md).

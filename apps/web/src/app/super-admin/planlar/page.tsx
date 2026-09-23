@@ -6,7 +6,8 @@ export default async function PlanlarPage() {
   const supabase = await createClient();
   const { data: plans } = await supabase
     .from("plans")
-    .select("id, name, monthly_price, max_tables, max_waiters, max_users, max_areas, active")
+    .select("id, code, name, monthly_price, max_tables, max_waiters, max_users, max_areas, active")
+    .order("sort_order", { ascending: true })
     .order("created_at", { ascending: true });
 
   return (

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import QRCode from "qrcode";
 import { createClient } from "@/lib/supabase/server";
@@ -21,8 +22,11 @@ export default async function QrMenuAdminPage() {
       <div className="max-w-xl">
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">QR Menü</h1>
         <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800">
-          QR Menü özelliği mevcut planınıza dahil değil. Etkinleştirmek için işletmenize destek
-          talebi oluşturabilir veya bizimle iletişime geçebilirsiniz.
+          QR Menü özelliği mevcut planınıza dahil değil. QR Menü içeren planları{" "}
+          <Link href="/isletme/abonelik" className="font-medium underline underline-offset-4">
+            Abonelik
+          </Link>{" "}
+          sayfasında görebilirsiniz.
         </div>
       </div>
     );

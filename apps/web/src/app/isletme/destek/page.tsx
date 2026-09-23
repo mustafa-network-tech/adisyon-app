@@ -68,10 +68,14 @@ export default async function DestekPage() {
         )}
       </div>
 
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Özel Yazılım Talebi</h1>
+      <div id="teklif" className="scroll-mt-8">
+        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
+          Çok Şubeli Teklif / Özel Yazılım Talebi
+        </h1>
         <p className="mt-1 text-sm text-zinc-600">
-          Standart özellikler ihtiyacınızı karşılamıyorsa özel bir çözüm talebinde bulunun.
+          Birden fazla şube için özel fiyat teklifi almak ya da standart planların karşılamadığı
+          bir ihtiyaç için özel çözüm talep etmek istiyorsanız bu formu kullanın. Şube sayınızı
+          belirtmeyi unutmayın.
         </p>
         <div className="mt-6">
           <CustomSoftwareForm />

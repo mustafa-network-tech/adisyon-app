@@ -78,17 +78,19 @@ export function EditPlanForm({ plan }: { plan: PlanDetail }) {
       </div>
       <div>
         <label className={labelClass} htmlFor="yearly_price">
-          Yıllık Fiyat (₺)
+          Yıllık Fiyat (₺) <span className="text-zinc-400">(otomatik)</span>
         </label>
         <input
           id="yearly_price"
-          name="yearly_price"
           type="number"
-          step="0.01"
-          min={0}
-          defaultValue={plan.yearly_price}
-          className={inputClass}
+          value={plan.yearly_price}
+          readOnly
+          disabled
+          className={`${inputClass} bg-zinc-50 text-zinc-500`}
         />
+        <p className="mt-1 text-xs text-zinc-500">
+          Aylık fiyat × 12 − yıllık indirim olarak kaydederken hesaplanır.
+        </p>
       </div>
       <div>
         <label className={labelClass} htmlFor="yearly_discount">

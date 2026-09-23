@@ -94,7 +94,9 @@ export async function updateStaffRole(
     .eq("id", membershipId)
     .eq("business_id", ctx.businessId);
 
-  if (error) return { error: "Rol güncellenemedi. Lütfen tekrar deneyin." };
+  if (error) {
+    return { error: friendlyWriteErrorMessage(error, "Rol güncellenemedi. Lütfen tekrar deneyin.") };
+  }
 
   // Audit entry (STAFF_ROLE_CHANGED) is written automatically by a DB
   // trigger on this update -- see 20260922000027_audit_rpc_hardening.sql.
@@ -121,7 +123,7 @@ export async function toggleStaffActive(
     .eq("id", membershipId)
     .eq("business_id", ctx.businessId);
 
-  if (error) return { error: "Güncellenemedi. Lütfen tekrar deneyin." };
+  if (error) return { error: friendlyWriteErrorMessage(error, "Güncellenemedi. Lütfen tekrar deneyin.") };
 
   // Audit entry (STAFF_REACTIVATED/STAFF_DEACTIVATED) is written
   // automatically by a DB trigger on this update -- see

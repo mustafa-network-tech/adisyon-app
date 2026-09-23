@@ -82,9 +82,11 @@ export function getBusinessAdminContext() {
   return getMembershipContext("BUSINESS_ADMIN");
 }
 
+// Kitchen Web: KITCHEN is the primary role, BUSINESS_ADMIN may also
+// open the board (order_items_update already covers both roles).
 export type KitchenContext = MembershipContext;
 export function getKitchenContext() {
-  return getMembershipContext("KITCHEN");
+  return getMembershipContext(["KITCHEN", "BUSINESS_ADMIN"]);
 }
 
 export type CashierContext = MembershipContext;

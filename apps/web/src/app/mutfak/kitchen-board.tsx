@@ -135,9 +135,22 @@ export function KitchenBoard({ businessId }: { businessId: string }) {
       )
       .subscribe();
 
+    // Same safety net as the Kasa board: realtime doesn't replay events
+    // missed while the websocket was down (tablet sleep, wifi drop), so
+    // resync when the tab becomes visible again, plus a slow poll.
+    function handleVisibility() {
+      if (document.visibilityState === "visible") refresh();
+    }
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("focus", refresh);
+    const pollInterval = setInterval(refresh, 30000);
+
     return () => {
       clearTimeout(initialLoad);
       supabase.removeChannel(channel);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("focus", refresh);
+      clearInterval(pollInterval);
     };
   }, [refresh, supabase, businessId]);
 
