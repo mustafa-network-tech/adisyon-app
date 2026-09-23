@@ -40,8 +40,10 @@ Ayrıntılı komutlar: [`apps/mobile/README.md`](../apps/mobile/README.md#play-s
 - [ ] `dart_define.json` production Supabase URL + anon key içeriyor.
 - [ ] `pubspec.yaml` `version` artırıldı (build numarası her yüklemede büyür).
 - [ ] `scripts/build_release.ps1` ile AAB üretildi; `build/symbols` saklandı.
-- [ ] İkon/splash gerçek marka görseliyle değiştirildi (şu an "MK"
-      monogram placeholder — bkz. `pubspec.yaml`).
+- [x] Uygulama ikonu ve splash hazır (adisyon fişi + onay rozeti,
+      `assets/icon/`). Play Console görselleri: `assets/store/play_icon_512.png`
+      (512×512 uygulama simgesi) ve `assets/store/feature_graphic_1024x500.png`
+      (öne çıkan görsel). Ekran görüntüleri henüz yok.
 
 Play Console (ilk yayında bir kez):
 
