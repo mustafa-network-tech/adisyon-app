@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/config/app_config.dart';
 import '../../../core/widgets/legal_links_bar.dart';
 import '../application/auth_providers.dart';
 
@@ -13,6 +15,19 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
+  Future<void> _openSignup() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final opened = await launchUrl(
+      Uri.parse('${AppConfig.webBaseUrl}/kayit'),
+      mode: LaunchMode.externalApplication,
+    );
+    if (!opened) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Kayıt sayfası açılamadı.')),
+      );
+    }
+  }
+
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -157,6 +172,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           )
                         : const Text('Giriş Yap'),
                   ),
+                  if (AppConfig.webBaseUrl.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    // Businesses sign up on the web (email confirmation +
+                    // trial live there); staff accounts are added by the
+                    // business admin, so there is no in-app sign-up form.
+                    TextButton(
+                      onPressed: _openSignup,
+                      child: const Text(
+                        'Hesabınız yok mu? İşletmenizi oluşturun',
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    Text(
+                      'Personel hesapları işletme yöneticisi tarafından eklenir.',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 16),
                   const LegalLinksBar(),
                 ],
