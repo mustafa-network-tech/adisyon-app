@@ -1,6 +1,15 @@
 -- MK Adisyon kalici test kullanicisi kurulumu.
 -- Bu dosya migration degildir. Yalnizca test/staging ortaminda,
 -- Supabase SQL Editor uzerinden postgres yetkisiyle calistirin.
+-- Tekrar calistirilabilir: her calismada asagidaki rol esleme durumuna getirir.
+--
+-- Test kullanicilari:
+--   eecceeb6-504e-4a75-813b-99f19b61841b = PLATFORM_SUPER_ADMIN (isletme uyeligi yok)
+--   7d4ec330-d7e7-4d18-b394-9b1b26f68b9f = BUSINESS_ADMIN
+--   c0d2e232-69a0-48f3-be90-aac2f3957034 = CASHIER
+--   a0ceeb8a-0abf-4548-bc80-f9b8ac7970fb = KITCHEN
+--   a96dbfd3-8265-4840-a47a-9dbde237269e = WAITER
+-- Isletme rolleri tek bir test isletmesinde (cccccccc-...-000000000001).
 
 begin;
 
@@ -54,17 +63,29 @@ where u.id in (
 on conflict (id) do update
 set email = excluded.email;
 
--- admin_a: platform super admin.
+-- Platform super admin: yalnizca eecceeb6. Diger test kullanicilari
+-- platform yoneticisi olmamali (yoksa isletme ekranlari yerine her seyi gorurler).
 insert into public.platform_admins (user_id)
 values ('eecceeb6-504e-4a75-813b-99f19b61841b')
 on conflict (user_id) do nothing;
 
+delete from public.platform_admins
+where user_id in (
+  '7d4ec330-d7e7-4d18-b394-9b1b26f68b9f',
+  'a0ceeb8a-0abf-4548-bc80-f9b8ac7970fb',
+  'c0d2e232-69a0-48f3-be90-aac2f3957034',
+  'a96dbfd3-8265-4840-a47a-9dbde237269e'
+);
+
 -- Test isletmesi. Sabit UUID sayesinde script tekrar calistirilabilir.
+-- Ultra Super plan + ACTIVE: tum ozellikler (QR menu dahil) test edilebilir,
+-- deneme suresi dolmaz.
 insert into public.businesses (
   id,
   name,
   business_type,
   subscription_status,
+  plan_id,
   active
 )
 values (
@@ -72,21 +93,52 @@ values (
   'MK Adisyon Test Isletmesi',
   'RESTAURANT',
   'ACTIVE',
+  (select id from public.plans where code = 'ultra_super'),
   true
 )
-on conflict (id) do nothing;
+on conflict (id) do update
+set
+  subscription_status = 'ACTIVE',
+  plan_id = coalesce(excluded.plan_id, public.businesses.plan_id),
+  active = true;
 
--- Isletme rolleri:
--- admin_b = BUSINESS_ADMIN
--- waiter_a = WAITER
--- kitchen_a = KITCHEN
--- cashier_a = CASHIER
+-- Mobil uygulama ilk aktif uyelige gore ekran actigi icin test
+-- kullanicilarinin baska isletmelerdeki aktif uyelikleri pasife alinir
+-- (silinmez). Super admin'in hic aktif isletme uyeligi olmaz.
+update public.business_memberships
+set active = false
+where active
+  and user_id in (
+    'eecceeb6-504e-4a75-813b-99f19b61841b',
+    '7d4ec330-d7e7-4d18-b394-9b1b26f68b9f',
+    'a0ceeb8a-0abf-4548-bc80-f9b8ac7970fb',
+    'c0d2e232-69a0-48f3-be90-aac2f3957034',
+    'a96dbfd3-8265-4840-a47a-9dbde237269e'
+  )
+  and (
+    business_id <> 'cccccccc-0000-0000-0000-000000000001'
+    or user_id = 'eecceeb6-504e-4a75-813b-99f19b61841b'
+  );
+
+-- Isletme rolleri. Once rolleri bir kez pasif hale getirip sonra
+-- aktiflestirmek, rol takasi sirasinda plan limit trigger'inin ara
+-- durumda yanlis sayim yapmasini onler.
+update public.business_memberships
+set active = false
+where business_id = 'cccccccc-0000-0000-0000-000000000001'
+  and user_id in (
+    '7d4ec330-d7e7-4d18-b394-9b1b26f68b9f',
+    'a0ceeb8a-0abf-4548-bc80-f9b8ac7970fb',
+    'c0d2e232-69a0-48f3-be90-aac2f3957034',
+    'a96dbfd3-8265-4840-a47a-9dbde237269e'
+  );
+
 insert into public.business_memberships (user_id, business_id, role, active)
 values
-  ('a96dbfd3-8265-4840-a47a-9dbde237269e', 'cccccccc-0000-0000-0000-000000000001', 'BUSINESS_ADMIN', true),
-  ('7d4ec330-d7e7-4d18-b394-9b1b26f68b9f', 'cccccccc-0000-0000-0000-000000000001', 'WAITER', true),
+  ('7d4ec330-d7e7-4d18-b394-9b1b26f68b9f', 'cccccccc-0000-0000-0000-000000000001', 'BUSINESS_ADMIN', true),
+  ('c0d2e232-69a0-48f3-be90-aac2f3957034', 'cccccccc-0000-0000-0000-000000000001', 'CASHIER', true),
   ('a0ceeb8a-0abf-4548-bc80-f9b8ac7970fb', 'cccccccc-0000-0000-0000-000000000001', 'KITCHEN', true),
-  ('c0d2e232-69a0-48f3-be90-aac2f3957034', 'cccccccc-0000-0000-0000-000000000001', 'CASHIER', true)
+  ('a96dbfd3-8265-4840-a47a-9dbde237269e', 'cccccccc-0000-0000-0000-000000000001', 'WAITER', true)
 on conflict (user_id, business_id) do update
 set
   role = excluded.role,
@@ -94,18 +146,17 @@ set
 
 commit;
 
--- Kurulum sonucu: bu sorgu 5 satir dondurmelidir.
+-- Kurulum sonucu: 5 satir; her kullanici icin tek rol ve aktif uyelik.
 select
   p.email,
   case
     when pa.user_id is not null then 'PLATFORM_SUPER_ADMIN'
     else bm.role
   end as role,
-  b.name as business_name,
-  coalesce(bm.active, true) as active
+  b.name as business_name
 from public.profiles p
 left join public.platform_admins pa on pa.user_id = p.id
-left join public.business_memberships bm on bm.user_id = p.id
+left join public.business_memberships bm on bm.user_id = p.id and bm.active
 left join public.businesses b on b.id = bm.business_id
 where p.id in (
   'eecceeb6-504e-4a75-813b-99f19b61841b',
